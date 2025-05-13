@@ -1,0 +1,99 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ArrowDown } from 'lucide-react';
+import Image from 'next/image';
+
+const Typewriter = ({ text, speed = 100 }: { text: string, speed?: number }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeoutId = setTimeout(() => {
+        setDisplayedText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentIndex, text, speed]);
+
+  return <span>{displayedText}</span>;
+};
+
+export default function HeroSection() {
+  const [offsetY, setOffsetY] = useState(0);
+  const handleScroll = () => setOffsetY(window.pageYOffset);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
+      {/* Parallax Background Layers */}
+      <div
+        className="absolute inset-0 z-0 opacity-30"
+        style={{ transform: `translateY(${offsetY * 0.3}px)` }}
+      >
+        <Image
+          src="https://picsum.photos/seed/parallaxbg1/1920/1080"
+          alt="Abstract background layer 1"
+          layout="fill"
+          objectFit="cover"
+          quality={75}
+          priority
+          data-ai-hint="abstract background"
+        />
+      </div>
+       <div
+        className="absolute inset-0 z-[1] opacity-20"
+        style={{ transform: `translateY(${offsetY * 0.15}px)` }}
+      >
+        <Image
+          src="https://picsum.photos/seed/parallaxbg2/1920/1080"
+          alt="Abstract background layer 2"
+          layout="fill"
+          objectFit="cover"
+          quality={75}
+          priority
+          data-ai-hint="geometric pattern"
+        />
+      </div>
+
+
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="mb-8 animate-float">
+           <Image
+            src="https://picsum.photos/seed/avatar/150/150"
+            alt="Milan - Creative Developer"
+            width={150}
+            height={150}
+            className="rounded-full border-4 border-primary shadow-lg"
+            data-ai-hint="profile picture"
+          />
+        </div>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
+          <Typewriter text="Hi, I'm Milan" />
+        </h1>
+        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90">
+          <Typewriter text="— a Creative Developer" speed={75} />
+        </p>
+        <Button
+          size="lg"
+          onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
+          className="group animate-fadeIn"
+          style={{ animationDelay: '2s' }}
+        >
+          Scroll to explore my journey
+          <ArrowDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform" />
+        </Button>
+      </div>
+       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        <ArrowDown className="h-8 w-8 text-foreground/70 animate-bounce" />
+      </div>
+    </section>
+  );
+}
