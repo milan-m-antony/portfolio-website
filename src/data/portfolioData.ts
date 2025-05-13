@@ -79,6 +79,34 @@ export const projectsData: Project[] = [
     imageHint: 'fitness app',
     tags: ['React Native', 'Firebase', 'Mobile App'],
   },
+  {
+    id: '4',
+    title: 'Data Visualization Dashboard',
+    description: 'An interactive dashboard for visualizing complex datasets using D3.js and React. Features various chart types and filtering options.',
+    imageUrl: 'https://picsum.photos/seed/project4/600/400',
+    imageHint: 'data dashboard charts',
+    liveDemoUrl: '#',
+    tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
+  },
+  {
+    id: '5',
+    title: 'Real-time Chat Application',
+    description: 'A scalable chat application built with Node.js, Socket.IO, and React. Supports multiple rooms and private messaging.',
+    imageUrl: 'https://picsum.photos/seed/project5/600/400',
+    imageHint: 'chat interface',
+    repoUrl: '#',
+    tags: ['Node.js', 'Socket.IO', 'React', 'MongoDB', 'Real-time'],
+  },
+  {
+    id: '6',
+    title: 'Personal Blog Platform',
+    description: 'A custom-built blogging platform with a Markdown editor, categories, tags, and a comment system. Developed using Next.js and Supabase.',
+    imageUrl: 'https://picsum.photos/seed/project6/600/400',
+    imageHint: 'blog website',
+    liveDemoUrl: '#',
+    repoUrl: '#',
+    tags: ['Next.js', 'Supabase', 'Markdown', 'PostgreSQL', 'SSR'],
+  }
 ];
 
 export const skillsData: SkillCategory[] = [
@@ -260,3 +288,4 @@ export const navLinks = [
   { href: "#resume", label: "Resume" },
   { href: "#contact", label: "Contact" },
 ];
+
