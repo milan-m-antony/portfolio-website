@@ -14,6 +14,7 @@ const navItems = [
   { href: '#skills', label: 'Skills' },
   { href: '#timeline', label: 'Journey' },
   { href: '#certifications', label: 'Certifications' },
+  { href: '#resume', label: 'Resume' },
   { href: '#contact', label: 'Contact' },
   { href: '/admin', label: 'Admin' },
 ];
@@ -88,3 +89,4 @@ export default function Header() {
     </header>
   );
 }
+
