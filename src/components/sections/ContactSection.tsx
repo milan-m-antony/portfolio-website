@@ -2,8 +2,9 @@
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import ContactForm from '@/components/ContactForm';
-import { Mail, Phone, MapPin, Linkedin, Github, Twitter, MessageSquare, Users2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Github, Twitter } from 'lucide-react';
 import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ContactSection() {
   const contactDetails = [
@@ -49,10 +50,6 @@ export default function ContactSection() {
       href: "https://x.com/yourusername",
       text: "x.com/yourusername"
     },
-    // Optional: WhatsApp & Telegram can be added here if needed.
-    // For now, keeping it simple with common professional links.
-    // { icon: MessageSquare, label: "WhatsApp", href: "https://wa.me/1234567890", text: "Chat on WhatsApp" }, // Example, use real number
-    // { icon: Users2, label: "Telegram", href: "https://t.me/yourusername", text: "Chat on Telegram" },
   ];
 
 
@@ -61,47 +58,54 @@ export default function ContactSection() {
       <SectionTitle subtitle="Have a project in mind, a question, or just want to say hi? Feel free to reach out. I'm always open to discussing new opportunities.">
         Get In Touch
       </SectionTitle>
-      <div className="grid md:grid-cols-2 gap-12 items-start max-w-5xl mx-auto">
-        <div className="space-y-8 p-6 bg-card rounded-lg shadow-md">
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground mb-6">Contact Information</h3>
-            {contactDetails.map((item, index) => (
-              <div key={index} className="flex items-start gap-4 mb-4">
-                <item.icon className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-foreground">{item.label}</p>
-                  {item.isLink ? (
-                    <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                      {item.value}
+      <Card className="max-w-5xl mx-auto shadow-xl">
+        <CardContent className="p-0 md:p-0"> {/* Remove default CardContent padding */}
+          <div className="grid md:grid-cols-2 items-start"> {/* No gap needed if padding is handled internally */}
+            {/* Left Side: Contact Information */}
+            <div className="space-y-8 p-6 md:p-8 bg-card rounded-l-lg"> {/* Add padding here */}
+              <div>
+                <h3 className="text-2xl font-semibold text-foreground mb-6">Contact Information</h3>
+                {contactDetails.map((item, index) => (
+                  <div key={index} className="flex items-start gap-4 mb-4">
+                    <item.icon className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-foreground">{item.label}</p>
+                      {item.isLink ? (
+                        <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                          {item.value}
+                        </Link>
+                      ) : (
+                        <p className="text-muted-foreground">{item.value}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold text-foreground mb-4">Connect With Me</h3>
+                <div className="space-y-3">
+                {socialLinks.map((social, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <social.icon className="h-5 w-5 text-primary flex-shrink-0" />
+                    <Link href={social.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                      {social.text}
                     </Link>
-                  ) : (
-                    <p className="text-muted-foreground">{item.value}</p>
-                  )}
+                  </div>
+                ))}
                 </div>
               </div>
-            ))}
-          </div>
-          
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-4">Connect With Me</h3>
-            <div className="space-y-3">
-            {socialLinks.map((social, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <social.icon className="h-5 w-5 text-primary flex-shrink-0" />
-                <Link href={social.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                  {social.text}
-                </Link>
-              </div>
-            ))}
+            </div>
+
+            {/* Right Side: Contact Form */}
+            <div className="p-6 md:p-8 bg-background md:bg-card md:rounded-r-lg"> {/* Add padding here, adjust bg for mobile */}
+               <h3 className="text-2xl font-semibold text-foreground mb-6 text-center md:text-left">Send Me a Message</h3>
+              <ContactForm />
             </div>
           </div>
-        </div>
-
-        <div className="p-6 bg-card rounded-lg shadow-md">
-           <h3 className="text-2xl font-semibold text-foreground mb-6 text-center md:text-left">Send Me a Message</h3>
-          <ContactForm />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </SectionWrapper>
   );
 }
+
