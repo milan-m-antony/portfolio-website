@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import { Github, Linkedin, Instagram, Facebook } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 // Enhanced Typewriter component specific to HeroSection
@@ -121,20 +120,20 @@ export default function HeroSection() {
 
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
-      {/* Parallax Background Layers - Example */}
+      {/* Parallax Background Layers */}
       <div className="absolute inset-0 z-0" style={{ transform: `translateY(${offsetY * 0.5}px)` }}>
         {/* Layer 1 - Farthest */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10 opacity-50" />
       </div>
       <div className="absolute inset-0 z-0" style={{ transform: `translateY(${offsetY * 0.3}px)` }}>
-        {/* Layer 2 - Middle */}
-         {/* You can add subtle patterns or shapes here */}
-         <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full opacity-30 animate-float" style={{animationDelay: '1s'}}/>
-         <div className="absolute -top-1/4 -right-1/4 w-2/3 h-2/3 bg-accent/5 rounded-lg opacity-20 animate-float" style={{animationDelay: '0.5s'}}/>
+        {/* Layer 2 - Middle (Subtle patterns or shapes) */}
+         {/* Example subtle shapes */}
+         {/* <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full opacity-30 animate-float" style={{animationDelay: '1s'}}/>
+         <div className="absolute -top-1/4 -right-1/4 w-2/3 h-2/3 bg-accent/5 rounded-lg opacity-20 animate-float" style={{animationDelay: '0.5s'}}/> */}
       </div>
       
       {/* Social Media Icons */}
-      <div className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 flex flex-col space-y-4" style={{ transform: `translateY(-50%) translateY(${offsetY * 0.1}px)` }}>
+      <div className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 flex flex-col space-y-6" style={{ transform: `translateY(-50%) translateY(${offsetY * 0.1}px)` }}>
         {socialLinks.map((social) => (
           <Link key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label}>
             <social.icon className="h-6 w-6 text-foreground/70 hover:text-primary transition-colors duration-300 ease-in-out transform hover:scale-110" />
@@ -143,11 +142,10 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10 flex flex-col items-center" style={{ transform: `translateY(${offsetY * 0.15}px)` }}>
-        {/* Removed the Image component for the profile picture */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 mt-8"> {/* Added mt-8 for spacing if needed after image removal */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 mt-8 animate-fadeIn" style={{animationDelay: '0.5s'}}>
           Hi, I'm Milan
         </h1>
-        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90 min-h-[2.5em] sm:min-h-[1.5em]">
+        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90 min-h-[2.5em] sm:min-h-[1.5em] animate-fadeIn" style={{animationDelay: '0.8s'}}>
           <EnhancedTypewriter 
             texts={roles} 
             typingSpeed={60} 
