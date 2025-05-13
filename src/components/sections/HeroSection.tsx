@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { ArrowDown, Github, Linkedin, Instagram, Facebook } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -42,8 +41,6 @@ export default function HeroSection() {
 
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
-      {/* Parallax Background Layers Removed */}
-      
       {/* Social Media Icons */}
       <div className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 flex flex-col space-y-4">
         {socialLinks.map((social) => (
@@ -71,15 +68,7 @@ export default function HeroSection() {
         <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90">
           <Typewriter text="— a Creative Developer" speed={75} />
         </p>
-        <Button
-          size="lg"
-          onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-          className="group animate-fadeIn"
-          style={{ animationDelay: '2s' }}
-        >
-          Scroll to explore my journey
-          <ArrowDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform" />
-        </Button>
+        {/* Removed Scroll to explore button */}
       </div>
        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
         <ArrowDown className="h-8 w-8 text-foreground/70 animate-bounce" />
