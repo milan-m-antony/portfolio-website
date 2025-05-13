@@ -5,7 +5,10 @@ import {
   Terminal, GitFork, Figma, FileCode, Package, Layers3, Orbit, Wind, GalleryThumbnails, Webhook, Route, Coffee, Binary, CodeXml, FileJson2, FileBadge2, DatabaseZap, Cpu, Network, Share2, Activity, ShieldCheck, Lightbulb, Workflow, Sparkles, TestTube2,
   Smartphone, Bot, ServerCog, CloudCog, DatabaseBackup, FolderGit2, Blocks, Anchor, Atom, AppWindow, BookMarked, Puzzle, BookHeart,
   Braces, SquareCode, Link, DatabaseIcon as SqlDatabase, BrainCircuit, Settings2, CircleUser, CheckCircle, Zap, DraftingCompass, Video, GanttChartSquare, Edit3, DownloadCloud, FolderKanban, UserCog,
-} from 'lucide-react'; // Added more icons
+  Rocket, Wrench, FlaskConical, CheckCircle2, Archive, ClipboardList
+} from 'lucide-react';
+
+export type ProjectStatus = 'Deployed' | 'In Progress' | 'Prototype' | 'Archived' | 'Concept' | 'Completed';
 
 export interface Project {
   id: string;
@@ -16,6 +19,8 @@ export interface Project {
   liveDemoUrl?: string;
   repoUrl?: string;
   tags: string[];
+  status: ProjectStatus;
+  progress?: number; // Optional, for 'In Progress' status
 }
 
 export interface Skill {
@@ -61,6 +66,7 @@ export const projectsData: Project[] = [
     liveDemoUrl: '#',
     repoUrl: '#',
     tags: ['Next.js', 'React', 'Firebase', 'Stripe', 'Tailwind CSS'],
+    status: 'Deployed',
   },
   {
     id: '2',
@@ -70,6 +76,8 @@ export const projectsData: Project[] = [
     imageHint: 'ai writing',
     repoUrl: '#',
     tags: ['Python', 'Flask', 'React', 'OpenAI API', 'Docker'],
+    status: 'In Progress',
+    progress: 75,
   },
   {
     id: '3',
@@ -78,6 +86,7 @@ export const projectsData: Project[] = [
     imageUrl: 'https://picsum.photos/seed/project3/600/400',
     imageHint: 'fitness app',
     tags: ['React Native', 'Firebase', 'Mobile App'],
+    status: 'Prototype',
   },
   {
     id: '4',
@@ -87,6 +96,7 @@ export const projectsData: Project[] = [
     imageHint: 'data dashboard charts',
     liveDemoUrl: '#',
     tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
+    status: 'Completed',
   },
   {
     id: '5',
@@ -96,6 +106,7 @@ export const projectsData: Project[] = [
     imageHint: 'chat interface',
     repoUrl: '#',
     tags: ['Node.js', 'Socket.IO', 'React', 'MongoDB', 'Real-time'],
+    status: 'Deployed',
   },
   {
     id: '6',
@@ -106,18 +117,38 @@ export const projectsData: Project[] = [
     liveDemoUrl: '#',
     repoUrl: '#',
     tags: ['Next.js', 'Supabase', 'Markdown', 'PostgreSQL', 'SSR'],
+    status: 'In Progress',
+    progress: 40,
+  },
+  {
+    id: '7',
+    title: 'Recipe Sharing App',
+    description: 'A community-driven platform for users to share and discover new recipes. Features user accounts, recipe submission, and ratings.',
+    imageUrl: 'https://picsum.photos/seed/project7/600/400',
+    imageHint: 'food recipe app',
+    tags: ['Vue.js', 'Firebase', 'Nuxt.js', 'Vuetify'],
+    status: 'Concept',
+  },
+  {
+    id: '8',
+    title: 'Indie Game Project',
+    description: 'A 2D platformer game being developed with Godot Engine. Focus on pixel art and engaging gameplay mechanics.',
+    imageUrl: 'https://picsum.photos/seed/project8/600/400',
+    imageHint: 'pixel art game',
+    tags: ['Godot Engine', 'GDScript', 'Game Development', 'Pixel Art'],
+    status: 'Archived',
   }
 ];
 
 export const skillsData: SkillCategory[] = [
   {
     name: 'Programming Languages',
-    icon: Braces, // Changed from Code
+    icon: Braces, 
     iconColor: 'text-sky-500',
     skills: [
-      { name: 'Python', icon: SquareCode, description: 'Versatile language for web, data science, and AI.' }, // Changed
-      { name: 'JavaScript', icon: SquareCode, description: 'Core language for web interactivity and full-stack development.' }, // Changed
-      { name: 'TypeScript', icon: SquareCode, description: 'Superset of JavaScript adding static types for robust applications.' }, // Changed
+      { name: 'Python', icon: SquareCode, description: 'Versatile language for web, data science, and AI.' }, 
+      { name: 'JavaScript', icon: SquareCode, description: 'Core language for web interactivity and full-stack development.' }, 
+      { name: 'TypeScript', icon: SquareCode, description: 'Superset of JavaScript adding static types for robust applications.' }, 
       { name: 'Java', icon: Coffee, description: 'Widely-used, object-oriented language for enterprise applications.' },
       { name: 'C / C++', icon: Binary, description: 'Powerful languages for system programming and performance-critical tasks.' },
       { name: 'HTML / CSS', icon: Palette, description: 'Fundamental technologies for structuring and styling web content.' },
@@ -132,7 +163,7 @@ export const skillsData: SkillCategory[] = [
       { name: 'Next.js', icon: Layers3, description: 'React framework for server-side rendering and static site generation.' },
       { name: 'Node.js', icon: Package, description: 'JavaScript runtime for building server-side applications.' },
       { name: 'Express.js', icon: Route, description: 'Minimalist web framework for Node.js.' },
-      { name: 'RESTful APIs', icon: Link, description: 'Designing and implementing scalable web services.' }, // Changed from Webhook
+      { name: 'RESTful APIs', icon: Link, description: 'Designing and implementing scalable web services.' }, 
       { name: 'Tailwind CSS', icon: Wind, description: 'Utility-first CSS framework for rapid UI development.' },
       { name: 'Bootstrap', icon: GalleryThumbnails, description: 'Popular front-end framework for responsive web design.' },
     ],
@@ -160,18 +191,18 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Databases',
-    icon: Database, // Using generic Database icon for category
+    icon: Database, 
     iconColor: 'text-yellow-500',
     skills: [
       { name: 'MongoDB', icon: DatabaseZap, description: 'NoSQL document-oriented database.' },
-      { name: 'MySQL', icon: SqlDatabase, description: 'Popular open-source relational database.' }, // Changed
-      { name: 'PostgreSQL', icon: SqlDatabase, description: 'Powerful open-source object-relational database system.' }, // Changed
+      { name: 'MySQL', icon: SqlDatabase, description: 'Popular open-source relational database.' }, 
+      { name: 'PostgreSQL', icon: SqlDatabase, description: 'Powerful open-source object-relational database system.' }, 
       { name: 'SQLite', icon: FileText, description: 'Lightweight, file-based relational database.' },
     ],
   },
   {
     name: 'AI / ML / Data',
-    icon: BrainCircuit, // Changed from Brain
+    icon: BrainCircuit, 
     iconColor: 'text-red-500',
     skills: [
       { name: 'Pandas', icon: BarChart2, description: 'Data manipulation and analysis library for Python.' },
@@ -185,14 +216,14 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Tools & Platforms',
-    icon: Settings2, // Changed from Settings
+    icon: Settings2, 
     iconColor: 'text-indigo-500',
     skills: [
       { name: 'Git', icon: GitFork, description: 'Distributed version control system.' },
       { name: 'GitHub', icon: FolderGit2, description: 'Web-based platform for version control and collaboration using Git.' },
       { name: 'VS Code', icon: FileCode, description: 'Popular source code editor with extensive features.' },
       { name: 'Figma', icon: Figma, description: 'Collaborative interface design tool.' },
-      { name: 'Adobe XD', icon: DraftingCompass, description: 'Vector-based UI/UX design tool for web and mobile apps.' }, // Changed
+      { name: 'Adobe XD', icon: DraftingCompass, description: 'Vector-based UI/UX design tool for web and mobile apps.' }, 
       { name: 'Postman', icon: Network, description: 'API platform for building and using APIs.' },
       { name: 'Linux', icon: Terminal, description: 'Open-source operating system widely used in servers and development.' },
       { name: 'WSL', icon: Laptop, description: 'Windows Subsystem for Linux for running Linux environments on Windows.' },
@@ -201,7 +232,7 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Soft Skills',
-    icon: CircleUser, // Changed from Users
+    icon: CircleUser, 
     iconColor: 'text-teal-500',
     skills: [
       { name: 'Problem Solving', icon: Lightbulb, description: 'Identifying issues and implementing effective solutions.' },
@@ -288,4 +319,3 @@ export const navLinks = [
   { href: "#resume", label: "Resume" },
   { href: "#contact", label: "Contact" },
 ];
-
