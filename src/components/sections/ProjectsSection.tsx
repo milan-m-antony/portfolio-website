@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from 'react';
@@ -15,34 +14,31 @@ const ProjectsSection = () => {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
-  const SCROLL_AMOUNT_PERCENT = 80; // Scroll by 80% of the container's visible width
+  const SCROLL_AMOUNT_PERCENT = 0.75; // Scroll by 75% of the container's visible width, or roughly 1-2 cards
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const { current } = scrollContainerRef;
-      const scrollAmount = (current.offsetWidth * SCROLL_AMOUNT_PERCENT) / 100;
+      // Attempt to scroll by approx one card width + gap.
+      // Card width is dynamic, so using a percentage of clientWidth.
+      // A more precise scroll would involve getting card width, but this is simpler.
+      const scrollAmount = current.clientWidth * SCROLL_AMOUNT_PERCENT;
+      
       if (direction === 'left') {
         current.scrollLeft -= scrollAmount;
       } else {
         current.scrollLeft += scrollAmount;
       }
-      // The 'scroll' event listener will call checkScrollability
     }
   };
 
   const checkScrollability = useCallback(() => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      const isEffectivelySmallScreen = window.innerWidth < 768; // Tailwind's 'md' breakpoint
-
-      if (isEffectivelySmallScreen) {
-        setCanScrollPrev(scrollLeft > 5); // Use a small threshold
-        setCanScrollNext(scrollLeft < scrollWidth - clientWidth - 5); // Use a small threshold
-      } else {
-        // On larger screens, ensure buttons are disabled as scrolling is not the primary interaction
-        setCanScrollPrev(false);
-        setCanScrollNext(false);
-      }
+      // Enable/disable buttons based on scroll position
+      // Use a small threshold (e.g., 5px) to account for floating point inaccuracies and smooth end stops
+      setCanScrollPrev(scrollLeft > 5);
+      setCanScrollNext(scrollWidth - clientWidth - scrollLeft > 5);
     }
   }, []);
 
@@ -58,7 +54,7 @@ const ProjectsSection = () => {
         window.removeEventListener('resize', checkScrollability);
       };
     }
-  }, [checkScrollability, projectsData]); // Re-check if projectsData changes
+  }, [checkScrollability, projectsData]);
 
   if (!projectsData || projectsData.length === 0) {
     return (
@@ -78,15 +74,34 @@ const ProjectsSection = () => {
       </SectionTitle>
       
       <div className="relative">
+        {/* Previous Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll('left')}
+          disabled={!canScrollPrev}
+          aria-label="Previous projects"
+          className="absolute left-1 sm:left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+
         <div
           ref={scrollContainerRef}
-          className="flex space-x-4 overflow-x-auto scroll-smooth scrollbar-hide p-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:space-x-0 md:overflow-visible md:p-0"
+          // Horizontal padding (px-10, sm:px-12, md:px-14) makes space for the absolute buttons
+          // so content doesn't go directly under them.
+          className="flex space-x-4 overflow-x-auto scroll-smooth scrollbar-hide p-2 px-10 sm:px-12 md:px-14" 
           role="list"
         >
           {projectsData.map((project: Project, index) => (
             <div
               key={project.id}
-              className="flex-shrink-0 w-[calc(100vw-5rem)] max-w-sm sm:w-80 md:w-auto animate-fadeIn"
+              // Card widths:
+              // - Default: Almost full width minus space for buttons & padding.
+              // - min-[480px] (xs-sm): A bit wider than smallest.
+              // - sm (640px+): Fixed width allowing potentially 2 cards visible.
+              // - md (768px+): Wider fixed width, potentially 2-3 cards visible.
+              className="flex-shrink-0 w-[calc(100vw-8rem)] min-[480px]:w-72 sm:w-80 md:w-96 animate-fadeIn"
               style={{ animationDelay: `${index * 0.1}s` }}
               role="listitem"
             >
@@ -95,29 +110,17 @@ const ProjectsSection = () => {
           ))}
         </div>
 
-        {/* Navigation Buttons - visible and functional only on <md screens */}
-        <div className="md:hidden flex justify-center items-center space-x-4 mt-6">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => scroll('left')}
-            disabled={!canScrollPrev}
-            aria-label="Previous projects"
-            className="rounded-full shadow-md"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => scroll('right')}
-            disabled={!canScrollNext}
-            aria-label="Next projects"
-            className="rounded-full shadow-md"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-        </div>
+        {/* Next Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll('right')}
+          disabled={!canScrollNext}
+          aria-label="Next projects"
+          className="absolute right-1 sm:right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
       </div>
     </SectionWrapper>
   );
