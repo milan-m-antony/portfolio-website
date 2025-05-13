@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Github, Linkedin, Instagram, Facebook } from 'lucide-react';
+import { Github, Linkedin, Instagram, Facebook, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
 // Enhanced Typewriter component specific to HeroSection
@@ -127,9 +127,6 @@ export default function HeroSection() {
       </div>
       <div className="absolute inset-0 z-0" style={{ transform: `translateY(${offsetY * 0.3}px)` }}>
         {/* Layer 2 - Middle (Subtle patterns or shapes) */}
-         {/* Example subtle shapes */}
-         {/* <div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full opacity-30 animate-float" style={{animationDelay: '1s'}}/>
-         <div className="absolute -top-1/4 -right-1/4 w-2/3 h-2/3 bg-accent/5 rounded-lg opacity-20 animate-float" style={{animationDelay: '0.5s'}}/> */}
       </div>
       
       {/* Social Media Icons */}
@@ -155,6 +152,17 @@ export default function HeroSection() {
           />
         </p>
       </div>
+      
+      {/* Scroll Down Arrow */}
+      <div 
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-fadeIn" 
+        style={{ animationDelay: '1.5s', transform: `translateX(-50%) translateY(${offsetY * 0.05}px)` }}
+      >
+        <a href="#about" aria-label="Scroll to about section">
+          <ChevronDown className="h-10 w-10 text-foreground/60 animate-bounce hover:text-primary transition-colors" />
+        </a>
+      </div>
     </section>
   );
 }
+
