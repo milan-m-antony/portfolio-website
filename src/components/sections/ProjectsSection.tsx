@@ -14,14 +14,12 @@ const ProjectsSection = () => {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
 
-  const SCROLL_AMOUNT_PERCENT = 0.75; // Scroll by 75% of the container's visible width, or roughly 1-2 cards
+  // Scroll by 100% of the container's visible width
+  const SCROLL_AMOUNT_PERCENT = 1.0; 
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const { current } = scrollContainerRef;
-      // Attempt to scroll by approx one card width + gap.
-      // Card width is dynamic, so using a percentage of clientWidth.
-      // A more precise scroll would involve getting card width, but this is simpler.
       const scrollAmount = current.clientWidth * SCROLL_AMOUNT_PERCENT;
       
       if (direction === 'left') {
@@ -35,8 +33,6 @@ const ProjectsSection = () => {
   const checkScrollability = useCallback(() => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      // Enable/disable buttons based on scroll position
-      // Use a small threshold (e.g., 5px) to account for floating point inaccuracies and smooth end stops
       setCanScrollPrev(scrollLeft > 5);
       setCanScrollNext(scrollWidth - clientWidth - scrollLeft > 5);
     }
@@ -45,16 +41,16 @@ const ProjectsSection = () => {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
-      checkScrollability(); // Initial check
+      checkScrollability(); 
       container.addEventListener('scroll', checkScrollability);
-      window.addEventListener('resize', checkScrollability); // Re-check on resize
+      window.addEventListener('resize', checkScrollability); 
 
       return () => {
         container.removeEventListener('scroll', checkScrollability);
         window.removeEventListener('resize', checkScrollability);
       };
     }
-  }, [checkScrollability, projectsData]);
+  }, [checkScrollability]); // Removed projectsData from dependencies as it's not directly used by checkScrollability
 
   if (!projectsData || projectsData.length === 0) {
     return (
@@ -74,7 +70,6 @@ const ProjectsSection = () => {
       </SectionTitle>
       
       <div className="relative">
-        {/* Previous Button */}
         <Button
           variant="outline"
           size="icon"
@@ -88,20 +83,16 @@ const ProjectsSection = () => {
 
         <div
           ref={scrollContainerRef}
-          // Horizontal padding (px-10, sm:px-12, md:px-14) makes space for the absolute buttons
-          // so content doesn't go directly under them.
           className="flex space-x-4 overflow-x-auto scroll-smooth scrollbar-hide p-2 px-10 sm:px-12 md:px-14" 
           role="list"
         >
           {projectsData.map((project: Project, index) => (
             <div
               key={project.id}
-              // Card widths:
-              // - Default: Almost full width minus space for buttons & padding.
-              // - min-[480px] (xs-sm): A bit wider than smallest.
-              // - sm (640px+): Fixed width allowing potentially 2 cards visible.
-              // - md (768px+): Wider fixed width, potentially 2-3 cards visible.
-              className="flex-shrink-0 w-[calc(100vw-8rem)] min-[480px]:w-72 sm:w-80 md:w-96 animate-fadeIn"
+              // Base (mobile): 1 card (w-full of scrollable area)
+              // md (tablets, 768px+): 2 cards (w-64 = 256px each)
+              // lg (desktops, 1024px+): 3 cards (w-72 = 288px each)
+              className="flex-shrink-0 w-full md:w-64 lg:w-72 animate-fadeIn"
               style={{ animationDelay: `${index * 0.1}s` }}
               role="listitem"
             >
@@ -110,7 +101,6 @@ const ProjectsSection = () => {
           ))}
         </div>
 
-        {/* Next Button */}
         <Button
           variant="outline"
           size="icon"
