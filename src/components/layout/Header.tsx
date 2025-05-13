@@ -40,9 +40,19 @@ export default function Header() {
           key={item.label}
           href={item.href}
           onClick={onClick}
-          className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 ease-in-out px-3 py-2 rounded-md hover:bg-[hsl(var(--accent-hover))]/50"
+          className="group relative overflow-hidden text-sm font-medium text-foreground/80 px-3 py-2 rounded-md" // Removed hover:text-foreground, hover:bg, transition-colors. Added overflow-hidden.
         >
-          {item.label}
+          {/* Original text that slides out */}
+          <span className="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-full group-hover:opacity-0">
+            {item.label}
+          </span>
+          {/* Text that slides in on hover from the left */}
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 
+                           inline-block transition-all duration-300 ease-in-out 
+                           translate-x-[-120%] group-hover:translate-x-0 
+                           text-primary whitespace-nowrap opacity-0 group-hover:opacity-100">
+            {item.label}
+          </span>
         </Link>
       ))}
     </>
@@ -101,3 +111,4 @@ export default function Header() {
     </header>
   );
 }
+
