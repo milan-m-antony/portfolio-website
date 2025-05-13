@@ -2,7 +2,7 @@
 "use client";
 import { Github, Linkedin, Mail, FileText, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,8 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 type ModalContentType = 'terms' | 'privacy' | null;
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [openModal, setOpenModal] = useState<ModalContentType>(null);
+  const [lastUpdatedDate, setLastUpdatedDate] = useState('');
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+    setLastUpdatedDate(new Date().toLocaleDateString());
+  }, []);
 
   const handleOpenModal = (type: ModalContentType) => {
     setOpenModal(type);
@@ -39,7 +45,7 @@ export default function Footer() {
       <p className="mb-4">This Agreement shall begin on the date hereof.</p>
       <h3 className="text-lg font-semibold mt-4 mb-2">Disclaimer</h3>
       <p>To the maximum extent permitted by applicable law, we exclude all representations, warranties and conditions relating to our website and the use of this website. Nothing in this disclaimer will limit or exclude our or your liability for death or personal injury; limit or exclude our or your liability for fraud or fraudulent misrepresentation; limit any of our or your liabilities in any way that is not permitted under applicable law; or exclude any of our or your liabilities that may not be excluded under applicable law.</p>
-      <p className="mt-6 text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+      {lastUpdatedDate && <p className="mt-6 text-sm text-muted-foreground">Last updated: {lastUpdatedDate}</p>}
     </>
   );
 
@@ -52,7 +58,7 @@ export default function Footer() {
       <p className="mb-4">Our website may link to external sites that are not operated by us. Please be aware that we have no control over the content and practices of these sites, and cannot accept responsibility or liability for their respective privacy policies.</p>
       <p className="mb-2">You are free to refuse our request for your personal information, with the understanding that we may be unable to provide you with some of your desired services.</p>
       <p className="mb-4">Your continued use of our website will be regarded as acceptance of our practices around privacy and personal information. If you have any questions about how we handle user data and personal information, feel free to contact us.</p>
-      <p className="mt-6 text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+      {lastUpdatedDate && <p className="mt-6 text-sm text-muted-foreground">Last updated: {lastUpdatedDate}</p>}
     </>
   );
 
@@ -113,9 +119,7 @@ export default function Footer() {
               {openModal === 'privacy' && privacyPolicyContent}
             </div>
           </ScrollArea>
-           <DialogClose asChild>
-                <Button variant="outline" className="mt-4" onClick={handleCloseModal}>Close</Button>
-            </DialogClose>
+           {/* Removed explicit close button here, DialogClose with X icon in DialogContent handles closing */}
         </DialogContent>
       </Dialog>
     </>
