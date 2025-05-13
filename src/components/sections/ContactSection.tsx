@@ -66,15 +66,15 @@ export default function ContactSection() {
 
 
   return (
-    <SectionWrapper id="contact" className="bg-secondary section-fade-in" style={{ animationDelay: '1.4s' }}>
+    <SectionWrapper id="contact" className="bg-background section-fade-in" style={{ animationDelay: '1.4s' }}>
       <SectionTitle subtitle="Have a project in mind, a question, or just want to say hi? Feel free to reach out. I'm always open to discussing new opportunities.">
         Get In Touch
       </SectionTitle>
-      <Card className="max-w-5xl mx-auto shadow-xl"> {/* Increased max-width for better two-column layout */}
-        <CardContent className="p-6 md:p-8 grid md:grid-cols-2 gap-8 md:gap-12 items-start"> {/* Grid layout for two columns */}
+      <Card className="max-w-5xl mx-auto shadow-xl">
+        <CardContent className="p-0 md:p-0 grid md:grid-cols-2 items-stretch"> {/* Removed padding, items-stretch */}
           
           {/* Left Column: Contact Info & Social Links */}
-          <div className="space-y-8">
+          <div className="space-y-8 p-6 md:p-8 bg-card rounded-l-lg h-full flex flex-col"> {/* Added h-full and flex flex-col */}
             <div>
               <h3 className="text-2xl font-semibold text-foreground mb-6">Contact Information</h3>
               {contactDetails.map((item, index) => (
@@ -94,9 +94,9 @@ export default function ContactSection() {
               ))}
             </div>
             
-            <div className="mt-8"> {/* Ensure some space if the above content is short */}
+            <div className="mt-auto pt-8"> {/* Changed mt-8 to mt-auto and added pt-8 */}
               <h3 className="text-xl font-semibold text-foreground mb-6">Connect With Me</h3>
-              <div className="space-y-4"> {/* Use space-y for vertical stacking of social links */}
+              <div className="space-y-4">
                 {socialLinks.map((social, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <social.icon className="h-5 w-5 text-primary flex-shrink-0" />
@@ -110,9 +110,11 @@ export default function ContactSection() {
           </div>
 
           {/* Right Column: Contact Form */}
-          <div className="space-y-6">
-            <h3 className="text-2xl font-semibold text-foreground mb-6 text-center md:text-left">Send Me a Message</h3>
-            <ContactForm />
+          <div className="space-y-6 p-6 md:p-8 bg-background md:bg-card rounded-r-lg h-full flex flex-col"> {/* Added md:bg-card, h-full, flex flex-col */}
+            <h3 className="text-2xl font-semibold text-foreground mb-0 text-center md:text-left">Send Me a Message</h3> {/* mb-0 */}
+            <div className="flex-grow"> {/* Added flex-grow to push button down */}
+              <ContactForm />
+            </div>
           </div>
 
         </CardContent>
@@ -120,3 +122,4 @@ export default function ContactSection() {
     </SectionWrapper>
   );
 }
+
