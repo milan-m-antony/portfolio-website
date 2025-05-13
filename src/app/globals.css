@@ -115,3 +115,14 @@ body {
   opacity: 0;
   animation: fadeIn 0.8s ease-out forwards;
 }
+
+/* Scrollbar hiding utilities */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
