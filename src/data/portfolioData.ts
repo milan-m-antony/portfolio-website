@@ -42,13 +42,11 @@ export interface TimelineEvent {
   date: string;
   title: string;
   description: string;
-  iconName: keyof typeof IconMap; // Changed from LucideIcon to string key
+  iconName: keyof typeof IconMap; 
   type: 'work' | 'education' | 'certification' | 'milestone';
 }
 
-// Define IconMap here or ensure it's available where TimelineEvent is used.
-// For simplicity, we'll assume TimelineItem.tsx will handle mapping.
-// This map would ideally be in a shared location or within TimelineItem.
+// This map is used by TimelineItem.tsx to render the correct icon
 const IconMap = {
   Lightbulb,
   Briefcase,
@@ -108,6 +106,7 @@ export const projectsData: Project[] = [
     description: 'An interactive dashboard for visualizing complex datasets using D3.js and React. Features various chart types and filtering options.',
     imageUrl: 'https://picsum.photos/seed/project4/600/400',
     imageHint: 'data dashboard charts',
+    liveDemoUrl: '#',
     repoUrl: '#', 
     tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
     status: 'Completed',
