@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -5,7 +6,7 @@ import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import CertificationCard from '@/components/ui/CertificationCard';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react'; // Removed X, DialogClose will provide one
 import { certificationsData } from '@/data/portfolioData';
 import type { Certification } from '@/data/portfolioData';
 import Image from 'next/image';
@@ -15,23 +16,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose
+  // DialogClose // No longer needed here, DialogContent provides its own
 } from "@/components/ui/dialog";
 
 const AUTO_SLIDE_INTERVAL = 5000; // 5 seconds
 
 const getResponsiveVisibleCardsCount = () => {
-  if (typeof window === 'undefined') return 1; // Default for SSR
-  if (window.innerWidth >= 1280) return 3; // xl and up: 3 cards
-  if (window.innerWidth >= 768) return 2;  // md to lg: 2 cards
-  return 1; // sm and down: 1 card
+  if (typeof window === 'undefined') return 1; 
+  if (window.innerWidth >= 1280) return 3; 
+  if (window.innerWidth >= 768) return 2;  
+  return 1; 
 };
 
 export default function CertificationsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null); // Initialize as null
+  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null); 
   
   const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +40,6 @@ export default function CertificationsSection() {
   const totalCertifications = certificationsData.length;
 
   useEffect(() => {
-    // This effect runs only on the client after hydration
     const calculateAndSetVisibleCards = () => {
       const count = getResponsiveVisibleCardsCount();
       setVisibleCardsCountOnClient(count);
@@ -50,7 +50,7 @@ export default function CertificationsSection() {
     return () => window.removeEventListener('resize', calculateAndSetVisibleCards);
   }, []);
 
-  const currentVisibleCards = visibleCardsCountOnClient ?? 1; // Default to 1 for SSR
+  const currentVisibleCards = visibleCardsCountOnClient ?? 1; 
 
   useEffect(() => {
     if (totalCertifications > 0 && currentVisibleCards > 0) {
@@ -72,11 +72,11 @@ export default function CertificationsSection() {
   const handleNext = useCallback(() => {
     if (totalCertifications <= currentVisibleCards) return;
     setCurrentIndex((prevIndex) => {
-      const nextIndexCandidate = prevIndex + 1;
-      if (nextIndexCandidate > totalCertifications - currentVisibleCards) {
-        return 0;
+      const nextIndexCandidate = prevIndex + currentVisibleCards;
+      if (nextIndexCandidate >= totalCertifications) {
+        return 0; // Loop to the beginning
       }
-      return nextIndexCandidate;
+      return Math.min(nextIndexCandidate, totalCertifications - currentVisibleCards);
     });
   }, [totalCertifications, currentVisibleCards]);
 
@@ -93,9 +93,9 @@ export default function CertificationsSection() {
   const handlePrev = () => {
     if (totalCertifications <= currentVisibleCards) return;
     setCurrentIndex((prevIndex) => {
-      const prevIndexCandidate = prevIndex - 1;
+      const prevIndexCandidate = prevIndex - currentVisibleCards;
       if (prevIndexCandidate < 0) {
-        return Math.max(0, totalCertifications - currentVisibleCards);
+        return Math.max(0, totalCertifications - currentVisibleCards); // Loop to the end
       }
       return prevIndexCandidate;
     });
@@ -133,11 +133,10 @@ export default function CertificationsSection() {
         onTouchEnd={() => setIsPaused(false)}
       >
         <div className="overflow-hidden rounded-lg">
-          {/* Conditional rendering: Only render the slider content if visibleCardsCountOnClient is set (client-side) */}
           {visibleCardsCountOnClient !== null ? (
             <div
               className="flex transition-transform duration-700 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * (100 / currentVisibleCards)}%)` }} // Recalculate transform
+              style={{ transform: `translateX(-${(currentIndex * 100) / totalCertifications * (totalCertifications / currentVisibleCards)}%)` }}
               role="list"
             >
               {certificationsData.map((cert, index) => (
@@ -156,13 +155,12 @@ export default function CertificationsSection() {
               ))}
             </div>
           ) : (
-            <div className="flex justify-center items-center h-80"> {/* Adjusted height for certification cards */}
+            <div className="flex justify-center items-center h-80">
                <p className="text-muted-foreground">Loading certifications...</p>
             </div>
           )}
         </div>
 
-        {/* Render buttons only if client-side calculation is done and there are enough certifications */}
         {visibleCardsCountOnClient !== null && totalCertifications > currentVisibleCards && (
           <>
             <Button
@@ -193,24 +191,28 @@ export default function CertificationsSection() {
             <DialogHeader className="p-4 border-b">
               <DialogTitle>{selectedCertification.title}</DialogTitle>
               <DialogDescription>Issued by {selectedCertification.issuer} on {selectedCertification.date}</DialogDescription>
-               <DialogClose asChild>
-                <Button variant="ghost" size="icon" className="absolute right-4 top-3">
-                  <X className="h-5 w-5" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </DialogClose>
+              {/* The explicit DialogClose button was removed from here as DialogContent provides one by default */}
             </DialogHeader>
             <div className="p-4">
-              <div className="relative w-full aspect-[3/2] max-h-[70vh]"> {/* Aspect ratio 3:2 for typical certificate */}
+              <div className="relative w-full aspect-[3/2] max-h-[70vh]"> 
                 <Image
                   src={selectedCertification.imageUrl}
                   alt={`Certificate for ${selectedCertification.title}`}
                   layout="fill"
-                  objectFit="contain" // Use contain to ensure the whole image is visible
+                  objectFit="contain" 
                   className="rounded-md"
                   data-ai-hint={selectedCertification.imageHint + " preview"}
                 />
               </div>
+              {selectedCertification.verifyUrl && (
+                <div className="mt-4 text-center">
+                  <Button asChild variant="link">
+                    <a href={selectedCertification.verifyUrl} target="_blank" rel="noopener noreferrer">
+                      Verify Credential
+                    </a>
+                  </Button>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -218,3 +220,4 @@ export default function CertificationsSection() {
     </SectionWrapper>
   );
 }
+

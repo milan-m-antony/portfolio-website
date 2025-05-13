@@ -14,10 +14,10 @@ interface CertificationCardProps {
 
 export default function CertificationCard({ certification, onClick }: CertificationCardProps) {
   return (
-    <Card 
+    <Card
       className={cn(
         "flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card",
-        onClick && "cursor-pointer"
+        onClick && "cursor-pointer group/cert-card transform hover:-translate-y-1 hover:scale-[1.02]" // Added group for text hover effect
       )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -25,34 +25,29 @@ export default function CertificationCard({ certification, onClick }: Certificat
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
       aria-label={onClick ? `View details for ${certification.title}` : undefined}
     >
-      <div className="relative w-full h-40 group"> {/* Added group for potential image zoom on hover */}
+      <div className="relative w-full h-40">
         <Image
           src={certification.imageUrl}
           alt={certification.title}
           layout="fill"
           objectFit="cover"
-          className="transition-transform duration-300 group-hover:scale-105" // Optional: zoom image on hover
+          className="transition-transform duration-300 group-hover/cert-card:scale-105"
           data-ai-hint={certification.imageHint}
         />
       </div>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">{certification.title}</CardTitle>
-        <CardDescription>{certification.issuer} - {certification.date}</CardDescription>
+        <CardDescription>{certification.issuer} - Issued {certification.date}</CardDescription>
       </CardHeader>
-      {certification.verifyUrl && (
-        <CardFooter className="mt-auto pt-0">
-          <Button 
-            asChild 
-            variant="link" 
-            className="p-0 h-auto text-primary"
-            onClick={(e) => e.stopPropagation()} // Prevent card's onClick if clicking the link
-          >
-            <Link href={certification.verifyUrl} target="_blank" rel="noopener noreferrer">
-              Verify Credential <ExternalLink className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </CardFooter>
-      )}
+      <CardContent className="flex-grow pt-0 pb-2">
+        {/* Placeholder for potential brief description if added to Certification type later */}
+      </CardContent>
+      <CardFooter className="mt-auto pt-2 pb-4">
+        <p className="text-xs text-muted-foreground text-center w-full group-hover/cert-card:text-primary transition-colors duration-300">
+          Click to preview certificate
+        </p>
+      </CardFooter>
     </Card>
   );
 }
+
