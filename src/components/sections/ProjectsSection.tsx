@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,35 +23,42 @@ const ProjectsSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [visibleCardsCount, setVisibleCardsCount] = useState(getResponsiveVisibleCardsCount());
+  
+  // Initialize with null, will be set client-side after mount.
+  // This ensures server render and initial client render use the fallback.
+  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null);
 
   const totalProjects = projectsData.length;
 
   useEffect(() => {
-    const handleResize = () => {
-      setVisibleCardsCount(getResponsiveVisibleCardsCount());
+    // This effect runs only on the client, after hydration.
+    const calculateAndSetVisibleCards = () => {
+      // window object is available here
+      const count = getResponsiveVisibleCardsCount();
+      setVisibleCardsCountOnClient(count);
     };
 
-    // Set initial count correctly on client mount
-    if (typeof window !== 'undefined') {
-      handleResize();
-    }
+    calculateAndSetVisibleCards(); // Set initial count on client mount
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    window.addEventListener('resize', calculateAndSetVisibleCards);
+    return () => window.removeEventListener('resize', calculateAndSetVisibleCards);
+  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+
+  // Use visibleCardsCountOnClient if available (client-side after mount),
+  // otherwise fallback to a server-consistent value (1 card).
+  const currentVisibleCards = visibleCardsCountOnClient ?? 1;
 
   // Adjust currentIndex if it becomes invalid after resize or if visibleCardsCount changes
   useEffect(() => {
-    if (totalProjects > 0 && visibleCardsCount > 0) {
-      const maxPossibleIndex = Math.max(0, totalProjects - visibleCardsCount);
+    if (totalProjects > 0 && currentVisibleCards > 0) {
+      const maxPossibleIndex = Math.max(0, totalProjects - currentVisibleCards);
       if (currentIndex > maxPossibleIndex) {
         setCurrentIndex(maxPossibleIndex);
       } else if (currentIndex < 0) { // Should not happen with current logic, but as a safeguard
         setCurrentIndex(0);
       }
     }
-  }, [visibleCardsCount, totalProjects, currentIndex]);
+  }, [currentVisibleCards, totalProjects, currentIndex]);
 
 
   const resetTimeout = useCallback(() => {
@@ -60,36 +68,36 @@ const ProjectsSection = () => {
   }, []);
 
   const handleNext = useCallback(() => {
-    if (totalProjects <= visibleCardsCount) return; // No sliding if all cards fit or fewer than fit
+    if (totalProjects <= currentVisibleCards) return; // No sliding if all cards fit or fewer than fit
 
     setCurrentIndex((prevIndex) => {
       const nextIndexCandidate = prevIndex + 1;
       // If next index would cause the view to go past the last possible full set of cards, loop to 0
-      if (nextIndexCandidate > totalProjects - visibleCardsCount) {
+      if (nextIndexCandidate > totalProjects - currentVisibleCards) {
         return 0;
       }
       return nextIndexCandidate;
     });
-  }, [totalProjects, visibleCardsCount]);
+  }, [totalProjects, currentVisibleCards]);
 
   useEffect(() => {
     resetTimeout();
-    if (!isPaused && totalProjects > visibleCardsCount) { // Only auto-slide if there's something to slide
+    if (!isPaused && totalProjects > currentVisibleCards) { // Only auto-slide if there's something to slide
       timeoutRef.current = setTimeout(handleNext, AUTO_SLIDE_INTERVAL);
     }
     return () => {
       resetTimeout();
     };
-  }, [currentIndex, isPaused, totalProjects, visibleCardsCount, resetTimeout, handleNext]);
+  }, [currentIndex, isPaused, totalProjects, currentVisibleCards, resetTimeout, handleNext]);
 
   const handlePrev = () => {
-    if (totalProjects <= visibleCardsCount) return;
+    if (totalProjects <= currentVisibleCards) return;
 
     setCurrentIndex((prevIndex) => {
       const prevIndexCandidate = prevIndex - 1;
       // If previous index is less than 0, loop to the last possible starting index
       if (prevIndexCandidate < 0) {
-        return Math.max(0, totalProjects - visibleCardsCount);
+        return Math.max(0, totalProjects - currentVisibleCards);
       }
       return prevIndexCandidate;
     });
@@ -105,8 +113,10 @@ const ProjectsSection = () => {
       </SectionWrapper>
     );
   }
-
-  const cardWidthPercentage = visibleCardsCount > 0 ? 100 / visibleCardsCount : 100;
+  
+  // On server & initial client render (pre-useEffect), currentVisibleCards is 1, so cardWidthPercentage is 100.
+  // After useEffect on client, currentVisibleCards updates, and so does cardWidthPercentage.
+  const cardWidthPercentage = currentVisibleCards > 0 ? 100 / currentVisibleCards : 100;
 
   return (
     <SectionWrapper id="projects" className="bg-secondary section-fade-in" style={{ animationDelay: '0.4s' }}>
@@ -130,10 +140,12 @@ const ProjectsSection = () => {
             {projectsData.map((project: Project, index: number) => (
               <div
                 key={project.id}
-                className="flex-shrink-0 p-1 md:p-2 box-border" // Added box-border
+                className="flex-shrink-0 p-1 md:p-2 box-border" 
                 style={{ width: `${cardWidthPercentage}%` }}
                 role="listitem"
-                aria-hidden={!(index >= currentIndex && index < currentIndex + visibleCardsCount)}
+                // On server/initial client render: currentVisibleCards = 1. Only first card visible.
+                // After client hydration & effect: currentVisibleCards reflects actual screen size.
+                aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
               >
                 <ProjectCard project={project} />
               </div>
@@ -141,7 +153,8 @@ const ProjectsSection = () => {
           </div>
         </div>
 
-        {totalProjects > visibleCardsCount && (
+        {/* Buttons are only rendered client-side after visibleCardsCountOnClient is determined */}
+        {visibleCardsCountOnClient !== null && totalProjects > currentVisibleCards && (
           <>
             <Button
               variant="outline"
