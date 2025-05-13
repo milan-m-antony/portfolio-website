@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogClose
 } from "@/components/ui/dialog";
 
@@ -107,7 +108,7 @@ export default function CertificationsSection() {
 
   if (!certificationsData || totalCertifications === 0) {
     return (
-      <SectionWrapper id="certifications" className="bg-secondary section-fade-in" style={{ animationDelay: '1.0s' }}>
+      <SectionWrapper id="certifications" className="bg-background section-fade-in" style={{ animationDelay: '1.0s' }}>
         <SectionTitle subtitle="A collection of certifications and badges.">
           Certifications & Badges
         </SectionTitle>
@@ -119,7 +120,7 @@ export default function CertificationsSection() {
   const cardWidthPercentage = currentVisibleCards > 0 ? 100 / currentVisibleCards : 100;
 
   return (
-    <SectionWrapper id="certifications" className="bg-secondary section-fade-in" style={{ animationDelay: '1.0s' }}>
+    <SectionWrapper id="certifications" className="bg-background section-fade-in" style={{ animationDelay: '1.0s' }}>
       <SectionTitle subtitle="A collection of certifications and badges earned from reputable platforms, validating my expertise.">
         Certifications & Badges
       </SectionTitle>
@@ -183,6 +184,7 @@ export default function CertificationsSection() {
           <DialogContent className="max-w-3xl w-full p-0">
             <DialogHeader className="p-4 border-b">
               <DialogTitle>{selectedCertification.title}</DialogTitle>
+              <DialogDescription>Issued by {selectedCertification.issuer} on {selectedCertification.date}</DialogDescription>
                <DialogClose asChild>
                 <Button variant="ghost" size="icon" className="absolute right-4 top-3">
                   <X className="h-5 w-5" />
