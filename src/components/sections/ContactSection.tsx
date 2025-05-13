@@ -2,7 +2,7 @@
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import ContactForm from '@/components/ContactForm';
-import { Mail, Phone, MapPin, Linkedin, Github, Twitter } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Github, Twitter, Instagram, Facebook } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -45,10 +45,22 @@ export default function ContactSection() {
       text: "github.com/yourusername"
     },
     {
-      icon: Twitter, // Using Twitter icon as X.com
+      icon: Twitter, 
       label: "X (Twitter)",
       href: "https://x.com/yourusername",
       text: "x.com/yourusername"
+    },
+    {
+      icon: Instagram,
+      label: "Instagram",
+      href: "https://instagram.com/yourusername",
+      text: "instagram.com/yourusername"
+    },
+    {
+      icon: Facebook,
+      label: "Facebook",
+      href: "https://facebook.com/yourusername",
+      text: "facebook.com/yourusername"
     },
   ];
 
@@ -62,7 +74,7 @@ export default function ContactSection() {
         <CardContent className="p-0 md:p-0"> {/* Remove default CardContent padding */}
           <div className="grid md:grid-cols-2 items-start"> {/* No gap needed if padding is handled internally */}
             {/* Left Side: Contact Information */}
-            <div className="space-y-8 p-6 md:p-8 bg-card rounded-l-lg"> {/* Add padding here */}
+            <div className="space-y-8 p-6 md:p-8 bg-card rounded-l-lg h-full"> {/* Add padding here, ensure h-full for potential equal height */}
               <div>
                 <h3 className="text-2xl font-semibold text-foreground mb-6">Contact Information</h3>
                 {contactDetails.map((item, index) => (
@@ -98,7 +110,7 @@ export default function ContactSection() {
             </div>
 
             {/* Right Side: Contact Form */}
-            <div className="p-6 md:p-8 bg-background md:bg-card md:rounded-r-lg"> {/* Add padding here, adjust bg for mobile */}
+            <div className="p-6 md:p-8 bg-background md:bg-card md:rounded-r-lg h-full"> {/* Add padding here, adjust bg for mobile, ensure h-full */}
                <h3 className="text-2xl font-semibold text-foreground mb-6 text-center md:text-left">Send Me a Message</h3>
               <ContactForm />
             </div>
@@ -108,4 +120,3 @@ export default function ContactSection() {
     </SectionWrapper>
   );
 }
-
