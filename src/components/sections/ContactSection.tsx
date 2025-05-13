@@ -2,7 +2,7 @@
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import ContactForm from '@/components/ContactForm';
-import { Github, Linkedin, Mail, Phone } from 'lucide-react';
+import { Github, Linkedin, Mail, Phone, MessageCircle, Twitter } from 'lucide-react'; // Added MessageCircle and Twitter
 import Link from 'next/link';
 
 export default function ContactSection() {
@@ -26,6 +26,18 @@ export default function ContactSection() {
               <Phone className="h-6 w-6 text-primary" />
               <span className="text-foreground">(Note: Phone number not public)</span>
             </div>
+             <div className="flex items-center gap-3">
+              <MessageCircle className="h-6 w-6 text-primary" />
+              <Link href="https://wa.me/yourphonenumber" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
+                WhatsApp (Optional)
+              </Link>
+            </div>
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-6 w-6 text-primary" /> {/* Using MessageCircle for Telegram as well, or could use Send icon */}
+              <Link href="https://t.me/yourusername" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
+                Telegram (Optional)
+              </Link>
+            </div>
             <div className="flex items-center gap-3">
               <Linkedin className="h-6 w-6 text-primary" />
               <Link href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
@@ -36,6 +48,12 @@ export default function ContactSection() {
               <Github className="h-6 w-6 text-primary" />
               <Link href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
                 github.com/yourusername
+              </Link>
+            </div>
+            <div className="flex items-center gap-3">
+              <Twitter className="h-6 w-6 text-primary" />
+              <Link href="https://x.com/yourusername" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary transition-colors">
+                x.com/yourusername
               </Link>
             </div>
           </div>

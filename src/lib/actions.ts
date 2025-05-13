@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -5,7 +6,9 @@ import { z } from "zod";
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Invalid email address."),
+  subject: z.string().min(2, "Subject must be at least 2 characters."),
   message: z.string().min(10, "Message must be at least 10 characters."),
+  phoneNumber: z.string().optional(), // Optional phone number
 });
 
 export interface SubmitContactFormState {
@@ -14,7 +17,9 @@ export interface SubmitContactFormState {
   errors?: {
     name?: string[];
     email?: string[];
+    subject?: string[];
     message?: string[];
+    phoneNumber?: string[];
   };
 }
 
@@ -25,7 +30,9 @@ export async function submitContactForm(
   const validatedFields = contactFormSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
+    subject: formData.get("subject"),
     message: formData.get("message"),
+    phoneNumber: formData.get("phoneNumber"),
   });
 
   if (!validatedFields.success) {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useActionState } from "react";
@@ -9,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { submitContactForm, type SubmitContactFormState } from "@/lib/actions";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Invalid email address."),
+  subject: z.string().min(2, "Subject must be at least 2 characters."),
   message: z.string().min(10, "Message must be at least 10 characters."),
+  phoneNumber: z.string().optional().or(z.literal("").transform(() => undefined)), // Handle empty string as undefined
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -101,6 +103,38 @@ export default function ContactForm() {
          {(errors.email || state.errors?.email) && (
           <p className="mt-1 text-sm text-destructive">
             {errors.email?.message || state.errors?.email?.[0]}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="subject">Subject</Label>
+        <Input
+          id="subject"
+          type="text"
+          {...register("subject")}
+          className={errors.subject || state.errors?.subject ? "border-destructive" : ""}
+          aria-invalid={errors.subject || state.errors?.subject ? "true" : "false"}
+        />
+         {(errors.subject || state.errors?.subject) && (
+          <p className="mt-1 text-sm text-destructive">
+            {errors.subject?.message || state.errors?.subject?.[0]}
+          </p>
+        )}
+      </div>
+      
+      <div>
+        <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
+        <Input
+          id="phoneNumber"
+          type="tel"
+          {...register("phoneNumber")}
+          className={errors.phoneNumber || state.errors?.phoneNumber ? "border-destructive" : ""}
+          aria-invalid={errors.phoneNumber || state.errors?.phoneNumber ? "true" : "false"}
+        />
+         {(errors.phoneNumber || state.errors?.phoneNumber) && (
+          <p className="mt-1 text-sm text-destructive">
+            {errors.phoneNumber?.message || state.errors?.phoneNumber?.[0]}
           </p>
         )}
       </div>
