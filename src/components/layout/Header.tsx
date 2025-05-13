@@ -1,23 +1,22 @@
-
 "use client";
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Menu, X, Sun, Moon, Code2 } from 'lucide-react';
+import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider'; 
 
 const navItems = [
-  { href: '#hero', label: 'Home' },
-  { href: '#about', label: 'About' },
-  { href: '#projects', label: 'Projects' },
-  { href: '#skills', label: 'Skills' },
-  { href: '#timeline', label: 'Journey' },
-  { href: '#certifications', label: 'Certifications' },
-  { href: '#resume', label: 'Resume' },
-  { href: '#contact', label: 'Contact' },
-  { href: '/admin', label: 'Admin' },
+  { href: '#hero', label: 'Home', icon: Home },
+  { href: '#about', label: 'About', icon: User },
+  { href: '#projects', label: 'Projects', icon: Briefcase },
+  { href: '#skills', label: 'Skills', icon: Wrench },
+  { href: '#timeline', label: 'Journey', icon: MapIcon },
+  { href: '#certifications', label: 'Certifications', icon: Award },
+  { href: '#resume', label: 'Resume', icon: FileText },
+  { href: '#contact', label: 'Contact', icon: Mail },
+  { href: '/admin', label: 'Admin', icon: Shield },
 ];
 
 export default function Header() {
@@ -35,26 +34,29 @@ export default function Header() {
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <>
-      {navItems.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          onClick={onClick}
-          className="group relative overflow-hidden text-sm font-medium text-foreground/80 px-3 py-2 rounded-md" // Removed hover:text-foreground, hover:bg, transition-colors. Added overflow-hidden.
-        >
-          {/* Original text that slides out */}
-          <span className="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-full group-hover:opacity-0">
-            {item.label}
-          </span>
-          {/* Text that slides in on hover from the left */}
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 
-                           inline-block transition-all duration-300 ease-in-out 
-                           translate-x-[-120%] group-hover:translate-x-0 
-                           text-primary whitespace-nowrap opacity-0 group-hover:opacity-100">
-            {item.label}
-          </span>
-        </Link>
-      ))}
+      {navItems.map((item) => {
+        const IconComponent = item.icon;
+        return (
+          <Link
+            key={item.label}
+            href={item.href}
+            onClick={onClick}
+            className="group relative overflow-hidden text-sm font-medium text-foreground/80 px-3 py-2 rounded-md"
+          >
+            {/* Text label: normally visible, slides out on hover */}
+            <span className="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-full group-hover:opacity-0">
+              {item.label}
+            </span>
+            {/* Icon: initially hidden to the left, slides in on hover */}
+            <IconComponent
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 
+                         inline-block transition-all duration-300 ease-in-out 
+                         translate-x-[-120%] group-hover:translate-x-0 
+                         text-primary opacity-0 group-hover:opacity-100 h-5 w-5"
+            />
+          </Link>
+        );
+      })}
     </>
   );
 
@@ -111,4 +113,3 @@ export default function Header() {
     </header>
   );
 }
-
