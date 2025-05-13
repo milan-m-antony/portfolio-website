@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Menu, X, Sun, Moon, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useTheme } from '@/contexts/ThemeProvider'; // Corrected import path
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useTheme } from '@/contexts/ThemeProvider'; 
 
 const navItems = [
   { href: '#about', label: 'About' },
@@ -71,12 +71,23 @@ export default function Header() {
                   {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0 transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-right-full">
-                <div className="p-6">
-                   <Link href="/" className="flex items-center gap-2 mb-6" onClick={() => setIsMobileMenuOpen(false)}>
+              <SheetContent 
+                side="right" 
+                className="w-[300px] sm:w-[340px] p-0 transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-right-full"
+              >
+                <SheetHeader className="p-6 border-b text-left">
+                  <SheetTitle>
+                    <Link 
+                      href="/" 
+                      className="flex items-center gap-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
                       <Code2 className="h-7 w-7 text-primary" />
                       <span className="font-bold text-xl">Milan.dev</span>
                     </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="p-6">
                   <nav className="flex flex-col space-y-3">
                     <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
                   </nav>
