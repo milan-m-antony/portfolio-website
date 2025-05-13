@@ -67,19 +67,24 @@ export default function AboutSection() {
     };
   }, []);
   
+  const parallaxStyleContainer = (factor: number) => ({
+    transform: `translateY(${offsetY * factor}px)`,
+    transition: 'transform 0.2s ease-out' // Smooth transition for parallax container
+  });
+
   const parallaxStyle = (factor: number) => ({
     transform: `translateY(${offsetY * factor}px)`,
-    transition: 'transform 0.1s ease-out' // Smooth transition for parallax
+    transition: 'transform 0.1s ease-out' // Smooth transition for parallax content
   });
 
 
   return (
-    <SectionWrapper id="about" className="section-fade-in bg-background overflow-hidden" style={{ animationDelay: '0.2s' }}>
-      <div style={parallaxStyle(0.1)} className="mb-12"> {/* Added mb-12 to ensure space below title block */}
-        <SectionTitle subtitle="A little more about who I am and what I do.">
-          About Me
-        </SectionTitle>
-      </div>
+    <SectionWrapper id="about" className="section-fade-in bg-background overflow-hidden" style={{ animationDelay: '0.2s', ...parallaxStyleContainer(0.05) }}>
+      {/* SectionTitle is now a direct child, its own margin and centering will apply */}
+      <SectionTitle subtitle="A little more about who I am and what I do.">
+        About Me
+      </SectionTitle>
+      
       <div className="grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-6 animate-fadeIn md:order-1" style={{animationDelay: '0.3s', ...parallaxStyle(0.15)}}>
           <h3 className="text-3xl font-semibold text-foreground leading-tight min-h-[2.5em]"> {/* min-h to prevent layout shift */}
