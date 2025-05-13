@@ -6,10 +6,18 @@ import { ArrowDown, Github, Linkedin, Instagram, Facebook } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+// Local Typewriter component specific to HeroSection
 const Typewriter = ({ text, speed = 100 }: { text: string, speed?: number }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Effect to reset and start typing when 'text' prop changes
+  useEffect(() => {
+    setDisplayedText(''); // Reset displayed text
+    setCurrentIndex(0);  // Reset current index to start typing from the beginning
+  }, [text]); // This effect runs when 'text' prop changes
+
+  // Effect for the typing animation itself
   useEffect(() => {
     if (currentIndex < text.length) {
       const timeoutId = setTimeout(() => {
@@ -39,6 +47,30 @@ export default function HeroSection() {
     { href: "https://facebook.com/yourusername", icon: Facebook, label: "Facebook" },
   ];
 
+  const roles = [
+    "— a Creative Developer",
+    "— a Cloud Developer",
+    "— a Web Designer",
+    "— a Network Engineer",
+    "— a Full-Stack Specialist",
+  ];
+  const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
+  const typingSpeedForRole = 75;
+  const pauseBetweenRoles = 2000; // 2 seconds pause
+
+  useEffect(() => {
+    const currentRoleText = roles[currentRoleIndex];
+    const timeToType = currentRoleText.length * typingSpeedForRole;
+    const cycleDelay = timeToType + pauseBetweenRoles;
+
+    const timer = setTimeout(() => {
+      setCurrentRoleIndex((prevIndex) => (prevIndex + 1) % roles.length);
+    }, cycleDelay);
+
+    return () => clearTimeout(timer);
+  }, [currentRoleIndex, roles, typingSpeedForRole, pauseBetweenRoles]);
+
+
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
       {/* Social Media Icons */}
@@ -60,13 +92,14 @@ export default function HeroSection() {
             height={150}
             className="rounded-full border-4 border-primary shadow-lg"
             data-ai-hint="profile picture"
+            priority
           />
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
-          <Typewriter text="Hi, I'm Milan" />
+          <Typewriter text="Hi, I'm Milan" speed={100} />
         </h1>
-        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90">
-          <Typewriter text="— a Creative Developer" speed={75} />
+        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90 min-h-[2.5em] sm:min-h-[1.5em]"> {/* Added min-h to prevent layout shift */}
+          <Typewriter text={roles[currentRoleIndex]} speed={typingSpeedForRole} />
         </p>
       </div>
     </section>
