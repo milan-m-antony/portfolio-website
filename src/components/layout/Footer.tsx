@@ -1,6 +1,6 @@
 // src/components/layout/Footer.tsx
 "use client";
-import { Github, Linkedin, Mail, FileText, ShieldCheck } from 'lucide-react';
+import { FileText, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -87,17 +87,7 @@ export default function Footer() {
               Privacy Policy
             </Button>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-              <Github className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors" />
-            </Link>
-            <Link href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-              <Linkedin className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors" />
-            </Link>
-            <Link href="mailto:milan@example.com" aria-label="Email">
-              <Mail className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors" />
-            </Link>
-          </div>
+          {/* Social media icons removed from here */}
         </div>
       </footer>
 
@@ -119,7 +109,6 @@ export default function Footer() {
               {openModal === 'privacy' && privacyPolicyContent}
             </div>
           </ScrollArea>
-           {/* Removed explicit close button here, DialogClose with X icon in DialogContent handles closing */}
         </DialogContent>
       </Dialog>
     </>
