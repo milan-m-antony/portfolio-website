@@ -75,13 +75,13 @@ export default function AboutSection() {
 
   return (
     <SectionWrapper id="about" className="section-fade-in bg-background overflow-hidden" style={{ animationDelay: '0.2s' }}>
-      <div style={parallaxStyle(0.1)}>
+      <div style={parallaxStyle(0.1)} className="mb-12"> {/* Added mb-12 to ensure space below title block */}
         <SectionTitle subtitle="A little more about who I am and what I do.">
           About Me
         </SectionTitle>
       </div>
       <div className="grid md:grid-cols-2 gap-12 items-center">
-        <div className="space-y-6 animate-fadeIn" style={{animationDelay: '0.3s', ...parallaxStyle(0.15)}}>
+        <div className="space-y-6 animate-fadeIn md:order-1" style={{animationDelay: '0.3s', ...parallaxStyle(0.15)}}>
           <h3 className="text-3xl font-semibold text-foreground leading-tight min-h-[2.5em]"> {/* min-h to prevent layout shift */}
             {typingStage === 0 && <span className="invisible">Milan: Weaving Code with Creativity</span>} {/* Placeholder for layout */}
             {typingStage >= 1 && <Typewriter text="Milan: Weaving " speed={70} onComplete={() => setTypingStage(s => Math.max(s, 2))} />}
@@ -112,7 +112,7 @@ export default function AboutSection() {
           </div>
         </div>
         <div 
-          className="relative h-96 md:h-[450px] rounded-lg overflow-hidden shadow-xl group animate-fadeIn hidden md:block" 
+          className="relative h-96 md:h-[450px] rounded-lg overflow-hidden shadow-xl group animate-fadeIn hidden md:block md:order-2" 
           style={{animationDelay: '0.4s', ...parallaxStyle(0.2)}}
         >
           <Image
