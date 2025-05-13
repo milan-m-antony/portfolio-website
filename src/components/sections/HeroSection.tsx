@@ -155,11 +155,11 @@ export default function HeroSection() {
       
       {/* Scroll Down Arrow */}
       <div 
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-fadeIn" 
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 animate-fadeIn" 
         style={{ animationDelay: '1.5s', transform: `translateX(-50%) translateY(${offsetY * 0.05}px)` }}
       >
         <a href="#about" aria-label="Scroll to about section">
-          <ChevronDown className="h-10 w-10 text-foreground/60 animate-bounce hover:text-primary transition-colors" />
+          <ChevronDown className="h-10 w-10 text-foreground/70 animate-bounce hover:text-primary transition-colors" />
         </a>
       </div>
     </section>
