@@ -155,7 +155,7 @@ export default function HeroSection() {
       
       {/* Scroll Down Arrow */}
       <div 
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 animate-fadeIn" 
+        className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 animate-fadeIn" 
         style={{ animationDelay: '1.5s', transform: `translateX(-50%) translateY(${offsetY * 0.05}px)` }}
       >
         <a href="#about" aria-label="Scroll to about section">
