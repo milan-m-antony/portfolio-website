@@ -1,9 +1,11 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Github, Linkedin, Instagram, Facebook } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const Typewriter = ({ text, speed = 100 }: { text: string, speed?: number }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -30,6 +32,13 @@ export default function HeroSection() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const socialLinks = [
+    { href: "https://github.com/yourusername", icon: Github, label: "GitHub" },
+    { href: "https://linkedin.com/in/yourusername", icon: Linkedin, label: "LinkedIn" },
+    { href: "https://instagram.com/yourusername", icon: Instagram, label: "Instagram" },
+    { href: "https://facebook.com/yourusername", icon: Facebook, label: "Facebook" },
+  ];
 
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
@@ -63,6 +72,15 @@ export default function HeroSection() {
         />
       </div>
 
+      {/* Social Media Icons */}
+      <div className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 flex flex-col space-y-4">
+        {socialLinks.map((social) => (
+          <Link key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label}>
+            <social.icon className="h-6 w-6 text-foreground/70 hover:text-primary transition-colors duration-300 ease-in-out transform hover:scale-110" />
+          </Link>
+        ))}
+      </div>
+
 
       <div className="relative z-10 flex flex-col items-center">
         <div className="mb-8 animate-float">
@@ -83,7 +101,7 @@ export default function HeroSection() {
         </p>
         <Button
           size="lg"
-          onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
           className="group animate-fadeIn"
           style={{ animationDelay: '2s' }}
         >

@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { useTheme } from '@/contexts/ThemeProvider'; 
 
 const navItems = [
+  { href: '#hero', label: 'Home' },
   { href: '#about', label: 'About' },
   { href: '#projects', label: 'Projects' },
   { href: '#skills', label: 'Skills' },
@@ -100,4 +101,3 @@ export default function Header() {
     </header>
   );
 }
-
