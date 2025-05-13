@@ -1,11 +1,14 @@
+
 "use client";
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider'; 
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '#hero', label: 'Home', icon: Home },
@@ -19,46 +22,143 @@ const navItems = [
   { href: '/admin', label: 'Admin', icon: Shield },
 ];
 
+const NavLinks = ({ onClick, activeHref }: { onClick?: () => void; activeHref: string }) => (
+  <>
+    {navItems.map((item) => {
+      const IconComponent = item.icon;
+      const isActive = item.href === activeHref;
+      return (
+        <Link
+          key={item.label}
+          href={item.href}
+          onClick={() => {
+            if (onClick) onClick();
+          }}
+          className={cn(
+            "relative text-sm font-medium text-foreground/80 px-3 py-2 rounded-md flex items-center transition-colors duration-150 ease-in-out",
+            isActive ? "text-primary font-semibold" : "group overflow-hidden hover:text-primary"
+          )}
+          aria-current={isActive ? "page" : undefined}
+        >
+          {isActive ? (
+            <>
+              <IconComponent className="h-5 w-5 mr-2 text-primary" />
+              <span>{item.label}</span>
+            </>
+          ) : (
+            <>
+              <span className="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-full group-hover:opacity-0">
+                {item.label}
+              </span>
+              <IconComponent
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 
+                           inline-block transition-all duration-300 ease-in-out 
+                           translate-x-[-120%] group-hover:translate-x-0 
+                           text-primary opacity-0 group-hover:opacity-100 h-5 w-5"
+              />
+            </>
+          )}
+        </Link>
+      );
+    })}
+  </>
+);
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [activeLink, setActiveLink] = useState<string>('#hero');
+  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const determineActiveLink = () => {
+      const currentPath = pathname;
+      const currentHash = window.location.hash;
+
+      if (currentPath === '/admin') {
+        setActiveLink('/admin');
+        return;
+      }
+
+      if (currentPath === '/') {
+        if (currentHash && currentHash !== '#') {
+          if (navItems.some(item => item.href === currentHash)) {
+            setActiveLink(currentHash);
+            return;
+          }
+        }
+
+        let newActiveLink = '#hero';
+        let minDistance = Infinity;
+        const referencePoint = 150; // Pixels from top of viewport to consider a section active
+
+        for (const item of navItems) {
+          if (item.href.startsWith('/')) continue;
+
+          const element = document.getElementById(item.href.substring(1));
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            
+            // Check if the section is reasonably visible
+            const elementTop = rect.top;
+            const elementBottom = rect.bottom;
+            const viewportHeight = window.innerHeight;
+
+            // Is the section in view? Check if element is between top and bottom of viewport
+            // A section is "in view" if its top is less than viewport height and its bottom is greater than 0.
+            const isInView = elementTop < viewportHeight && elementBottom > 0;
+
+            if (isInView) {
+                // Calculate distance from the reference point (e.g. top of viewport or a bit lower)
+                const distance = Math.abs(elementTop - referencePoint);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    newActiveLink = item.href;
+                }
+            }
+          }
+        }
+        // If scrolled to the very bottom, 'contact' should be active
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) { // 50px tolerance
+            const contactItem = navItems.find(item => item.href === '#contact');
+            if (contactItem) newActiveLink = contactItem.href;
+        }
+        // If scrolled to the very top, 'hero' should be active
+        else if (window.scrollY <= 50) {
+            const heroItem = navItems.find(item => item.href === '#hero');
+            if (heroItem) newActiveLink = heroItem.href;
+        }
+
+
+        setActiveLink(newActiveLink);
+      }
+    };
+
+    if (mounted) { // Only run listeners if component is mounted
+      determineActiveLink(); // Initial determination
+      window.addEventListener('scroll', determineActiveLink, { passive: true });
+      window.addEventListener('hashchange', determineActiveLink);
+      window.addEventListener('resize', determineActiveLink);
+    }
+
+    return () => {
+      if (mounted) {
+        window.removeEventListener('scroll', determineActiveLink);
+        window.removeEventListener('hashchange', determineActiveLink);
+        window.removeEventListener('resize', determineActiveLink);
+      }
+    };
+  }, [pathname, mounted]);
+
 
   if (!mounted) return null;
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
-
-  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
-    <>
-      {navItems.map((item) => {
-        const IconComponent = item.icon;
-        return (
-          <Link
-            key={item.label}
-            href={item.href}
-            onClick={onClick}
-            className="group relative overflow-hidden text-sm font-medium text-foreground/80 px-3 py-2 rounded-md"
-          >
-            {/* Text label: normally visible, slides out on hover */}
-            <span className="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-full group-hover:opacity-0">
-              {item.label}
-            </span>
-            {/* Icon: initially hidden to the left, slides in on hover */}
-            <IconComponent
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 
-                         inline-block transition-all duration-300 ease-in-out 
-                         translate-x-[-120%] group-hover:translate-x-0 
-                         text-primary opacity-0 group-hover:opacity-100 h-5 w-5"
-            />
-          </Link>
-        );
-      })}
-    </>
-  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,7 +169,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-1">
-          <NavLinks />
+          <NavLinks activeHref={activeLink} />
         </nav>
 
         <div className="flex items-center gap-2">
@@ -102,7 +202,7 @@ export default function Header() {
                 </SheetHeader>
                 <div className="p-6">
                   <nav className="flex flex-col space-y-3">
-                    <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
+                    <NavLinks onClick={() => setIsMobileMenuOpen(false)} activeHref={activeLink} />
                   </nav>
                 </div>
               </SheetContent>
