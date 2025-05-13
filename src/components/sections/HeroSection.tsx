@@ -2,34 +2,92 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { ArrowDown, Github, Linkedin, Instagram, Facebook } from 'lucide-react';
+import { Github, Linkedin, Instagram, Facebook } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Local Typewriter component specific to HeroSection
-const Typewriter = ({ text, speed = 100 }: { text: string, speed?: number }) => {
+// Enhanced Typewriter component specific to HeroSection
+const EnhancedTypewriter = ({
+  texts,
+  typingSpeed = 60,
+  deletingSpeed = 40,
+  pauseAfterTypingDuration = 1500,
+  pauseAfterDeletingDuration = 500,
+}: {
+  texts: string[];
+  typingSpeed?: number;
+  deletingSpeed?: number;
+  pauseAfterTypingDuration?: number;
+  pauseAfterDeletingDuration?: number;
+}) => {
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // charDisplayProgress tracks the number of characters currently displayed from the target string
+  const [charDisplayProgress, setCharDisplayProgress] = useState(0);
 
-  // Effect to reset and start typing when 'text' prop changes
   useEffect(() => {
-    setDisplayedText(''); // Reset displayed text
-    setCurrentIndex(0);  // Reset current index to start typing from the beginning
-  }, [text]); // This effect runs when 'text' prop changes
+    if (!texts || texts.length === 0) return;
 
-  // Effect for the typing animation itself
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeoutId = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[currentIndex]);
-        setCurrentIndex((prev) => prev + 1);
-      }, speed);
-      return () => clearTimeout(timeoutId);
+    const currentTargetText = texts[currentTextIndex];
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) { // Typing phase
+      if (charDisplayProgress < currentTargetText.length) {
+        timer = setTimeout(() => {
+          setDisplayedText(currentTargetText.substring(0, charDisplayProgress + 1));
+          setCharDisplayProgress((prev) => prev + 1);
+        }, typingSpeed);
+      } else { // Finished typing, pause then switch to deleting
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+          // charDisplayProgress is already at currentTargetText.length, which is correct for starting deletion
+        }, pauseAfterTypingDuration);
+      }
+    } else { // Deleting phase
+      if (charDisplayProgress > 0) {
+        timer = setTimeout(() => {
+          // Use currentTargetText to ensure correct substring during deletion
+          setDisplayedText(currentTargetText.substring(0, charDisplayProgress - 1));
+          setCharDisplayProgress((prev) => prev - 1);
+        }, deletingSpeed);
+      } else { // Finished deleting, pause then switch to next text
+        timer = setTimeout(() => {
+          setIsDeleting(false);
+          setCurrentTextIndex((prev) => (prev + 1) % texts.length);
+          // charDisplayProgress is 0, ready for next typing. displayedText is already ""
+        }, pauseAfterDeletingDuration);
+      }
     }
-  }, [currentIndex, text, speed]);
+
+    return () => clearTimeout(timer);
+  }, [
+    charDisplayProgress,
+    isDeleting,
+    currentTextIndex,
+    texts,
+    typingSpeed,
+    deletingSpeed,
+    pauseAfterTypingDuration,
+    pauseAfterDeletingDuration,
+  ]);
+
+  // Effect to reset progress when the text to display (currentTextIndex) changes,
+  // ensuring we start typing the new text from scratch.
+  useEffect(() => {
+    // Only reset if we are not in a deleting phase.
+    // This check ensures that if currentTextIndex changes as part of finishing deletion,
+    // we correctly reset for the *next* typing cycle.
+    if (!isDeleting) {
+      setCharDisplayProgress(0);
+      setDisplayedText('');
+    }
+  }, [currentTextIndex, isDeleting]); // isDeleting is included to correctly handle the transition from deleting to typing the next word
+
 
   return <span>{displayedText}</span>;
 };
+
 
 export default function HeroSection() {
   const [offsetY, setOffsetY] = useState(0);
@@ -54,22 +112,6 @@ export default function HeroSection() {
     "— a Network Engineer",
     "— a Full-Stack Specialist",
   ];
-  const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
-  const typingSpeedForRole = 75;
-  const pauseBetweenRoles = 2000; // 2 seconds pause
-
-  useEffect(() => {
-    const currentRoleText = roles[currentRoleIndex];
-    const timeToType = currentRoleText.length * typingSpeedForRole;
-    const cycleDelay = timeToType + pauseBetweenRoles;
-
-    const timer = setTimeout(() => {
-      setCurrentRoleIndex((prevIndex) => (prevIndex + 1) % roles.length);
-    }, cycleDelay);
-
-    return () => clearTimeout(timer);
-  }, [currentRoleIndex, roles, typingSpeedForRole, pauseBetweenRoles]);
-
 
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
@@ -81,7 +123,6 @@ export default function HeroSection() {
           </Link>
         ))}
       </div>
-
 
       <div className="relative z-10 flex flex-col items-center">
         <div className="mb-8 animate-float">
@@ -96,13 +137,19 @@ export default function HeroSection() {
           />
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
-          <Typewriter text="Hi, I'm Milan" speed={100} />
+          {/* Simple static text for the name, as typewriter is now for roles */}
+          Hi, I'm Milan
         </h1>
-        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90 min-h-[2.5em] sm:min-h-[1.5em]"> {/* Added min-h to prevent layout shift */}
-          <Typewriter text={roles[currentRoleIndex]} speed={typingSpeedForRole} />
+        <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90 min-h-[2.5em] sm:min-h-[1.5em]">
+          <EnhancedTypewriter 
+            texts={roles} 
+            typingSpeed={60} 
+            deletingSpeed={40}
+            pauseAfterTypingDuration={1800}
+            pauseAfterDeletingDuration={300}
+          />
         </p>
       </div>
     </section>
   );
 }
-
