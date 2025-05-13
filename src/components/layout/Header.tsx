@@ -40,7 +40,7 @@ export default function Header() {
           key={item.label}
           href={item.href}
           onClick={onClick}
-          className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 ease-in-out px-3 py-2 rounded-md hover:bg-accent/50"
+          className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 ease-in-out px-3 py-2 rounded-md hover:bg-[hsl(var(--accent-hover))]/50"
         >
           {item.label}
         </Link>

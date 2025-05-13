@@ -74,7 +74,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   if (project.repoUrl) {
     if (isActionable) {
       sourceCodeButton = (
-        <Button asChild variant="outline" className="flex-1 hover:bg-accent/10 hover:text-accent-foreground transition-colors duration-300">
+        <Button asChild variant="outline" className="flex-1">
           <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer">
             <Github className="mr-2 h-4 w-4" /> Source Code
           </Link>

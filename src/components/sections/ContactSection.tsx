@@ -83,7 +83,7 @@ export default function ContactSection() {
                   <div>
                     <p className="font-medium text-foreground">{item.label}</p>
                     {item.isLink ? (
-                      <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors break-all">
+                      <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-[hsl(var(--primary-hover))] transition-colors break-all">
                         {item.value}
                       </Link>
                     ) : (
@@ -100,7 +100,7 @@ export default function ContactSection() {
                 {socialLinks.map((social, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <social.icon className="h-5 w-5 text-primary flex-shrink-0" />
-                    <Link href={social.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors text-sm break-all">
+                    <Link href={social.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-[hsl(var(--primary-hover))] transition-colors text-sm break-all">
                       {social.text}
                     </Link>
                   </div>
