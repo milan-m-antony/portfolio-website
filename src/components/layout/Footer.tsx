@@ -65,12 +65,12 @@ export default function Footer() {
   return (
     <>
       <footer className="border-t border-border/40 bg-background">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-6 py-10 md:h-24 md:flex-row md:py-0 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-2 px-8 md:flex-row md:gap-2 md:px-0 text-center md:text-left">
+        <div className="container mx-auto flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-center">
             <p className="text-sm leading-loose text-muted-foreground">
               &copy; {currentYear} Milan. All rights reserved.
             </p>
-            <span className="hidden md:inline-block text-muted-foreground mx-1">|</span>
+            <span className="hidden sm:inline-block text-muted-foreground mx-1">|</span>
             <Button
               variant="link"
               className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
@@ -78,7 +78,7 @@ export default function Footer() {
             >
               Terms & Conditions
             </Button>
-            <span className="text-muted-foreground mx-1">·</span>
+            <span className="hidden sm:inline-block text-muted-foreground mx-1">·</span>
             <Button
               variant="link"
               className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
@@ -87,7 +87,6 @@ export default function Footer() {
               Privacy Policy
             </Button>
           </div>
-          {/* Social media icons removed from here */}
         </div>
       </footer>
 
