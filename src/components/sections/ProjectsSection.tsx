@@ -22,17 +22,17 @@ const ProjectsSection = () => {
       const { current } = scrollContainerRef;
       const scrollAmount = current.clientWidth * SCROLL_AMOUNT_PERCENT;
       
-      if (direction === 'left') {
-        current.scrollLeft -= scrollAmount;
-      } else {
-        current.scrollLeft += scrollAmount;
-      }
+      current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth', // Ensure smooth scrolling for programmatic scroll
+      });
     }
   };
 
   const checkScrollability = useCallback(() => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      // Add a small tolerance (e.g., 5px) for floating point inaccuracies
       setCanScrollPrev(scrollLeft > 5);
       setCanScrollNext(scrollWidth - clientWidth - scrollLeft > 5);
     }
@@ -42,15 +42,20 @@ const ProjectsSection = () => {
     const container = scrollContainerRef.current;
     if (container) {
       checkScrollability(); 
-      container.addEventListener('scroll', checkScrollability);
+      // Debounce or throttle checkScrollability if performance issues arise on frequent scrolls
+      container.addEventListener('scroll', checkScrollability, { passive: true });
       window.addEventListener('resize', checkScrollability); 
+
+      // Initial check after projects are loaded
+      const initialCheckTimeout = setTimeout(checkScrollability, 100);
 
       return () => {
         container.removeEventListener('scroll', checkScrollability);
         window.removeEventListener('resize', checkScrollability);
+        clearTimeout(initialCheckTimeout);
       };
     }
-  }, [checkScrollability]); // Removed projectsData from dependencies as it's not directly used by checkScrollability
+  }, [checkScrollability]);
 
   if (!projectsData || projectsData.length === 0) {
     return (
@@ -76,23 +81,20 @@ const ProjectsSection = () => {
           onClick={() => scroll('left')}
           disabled={!canScrollPrev}
           aria-label="Previous projects"
-          className="absolute left-1 sm:left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm md:left-[-1rem] lg:left-[-1.5rem]"
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
 
         <div
           ref={scrollContainerRef}
-          className="flex space-x-4 overflow-x-auto scroll-smooth scrollbar-hide p-2 px-10 sm:px-12 md:px-14" 
+          className="flex space-x-4 overflow-x-auto scroll-smooth scrollbar-hide p-2 scroll-snap-type-x-mandatory" 
           role="list"
         >
           {projectsData.map((project: Project, index) => (
             <div
               key={project.id}
-              // Base (mobile): 1 card (w-full of scrollable area)
-              // md (tablets, 768px+): 2 cards (w-64 = 256px each)
-              // lg (desktops, 1024px+): 3 cards (w-72 = 288px each)
-              className="flex-shrink-0 w-full md:w-64 lg:w-72 animate-fadeIn"
+              className="flex-shrink-0 w-72 sm:w-80 scroll-snap-align-start animate-fadeIn" // Fixed width for cards, scroll-snap align
               style={{ animationDelay: `${index * 0.1}s` }}
               role="listitem"
             >
@@ -107,7 +109,7 @@ const ProjectsSection = () => {
           onClick={() => scroll('right')}
           disabled={!canScrollNext}
           aria-label="Next projects"
-          className="absolute right-1 sm:right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg bg-background/70 hover:bg-background backdrop-blur-sm md:right-[-1rem] lg:right-[-1.5rem]"
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
