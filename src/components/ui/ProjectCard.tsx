@@ -28,7 +28,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const isActionable = project.status === 'Deployed' || project.status === 'Completed';
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden shadow-lg bg-card transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1.5 hover:scale-[1.02]">
+    <Card className="flex flex-col h-full overflow-hidden shadow-lg bg-card transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.015]">
       <div className="relative w-full h-48 md:h-56 group">
         <Image
           src={project.imageUrl}
@@ -75,7 +75,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </CardContent>
       <CardFooter className="mt-auto pt-0">
         <div className="flex gap-2 w-full">
-          {project.liveDemoUrl && (
+          {project.liveDemoUrl ? (
             isActionable ? (
               <Button asChild variant="outline" className="flex-1">
                 <Link href={project.liveDemoUrl} target="_blank" rel="noopener noreferrer">
@@ -96,8 +96,23 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 </Tooltip>
               </TooltipProvider>
             )
+          ) : ( // Render disabled button even if no URL, if not actionable
+             !isActionable && (
+                <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" className="flex-1" disabled>
+                      <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This project is under development.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+             )
           )}
-          {project.repoUrl && (
+          {project.repoUrl ? (
             isActionable ? (
               <Button asChild variant="secondary" className="flex-1">
                 <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer">
@@ -106,6 +121,21 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               </Button>
             ) : (
               <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="secondary" className="flex-1" disabled>
+                      <Github className="mr-2 h-4 w-4" /> Source Code
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This project is under development.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )
+          ) : ( // Render disabled button even if no URL, if not actionable
+            !isActionable && (
+                 <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="secondary" className="flex-1" disabled>
