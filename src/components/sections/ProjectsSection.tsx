@@ -24,37 +24,30 @@ const ProjectsSection = () => {
   const [isPaused, setIsPaused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Initialize with null, will be set client-side after mount.
-  // This ensures server render and initial client render use the fallback.
   const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null);
 
   const totalProjects = projectsData.length;
 
   useEffect(() => {
-    // This effect runs only on the client, after hydration.
     const calculateAndSetVisibleCards = () => {
-      // window object is available here
       const count = getResponsiveVisibleCardsCount();
       setVisibleCardsCountOnClient(count);
     };
 
-    calculateAndSetVisibleCards(); // Set initial count on client mount
+    calculateAndSetVisibleCards(); 
 
     window.addEventListener('resize', calculateAndSetVisibleCards);
     return () => window.removeEventListener('resize', calculateAndSetVisibleCards);
-  }, []); // Empty dependency array ensures this runs once on mount (client-side)
+  }, []); 
 
-  // Use visibleCardsCountOnClient if available (client-side after mount),
-  // otherwise fallback to a server-consistent value (1 card).
   const currentVisibleCards = visibleCardsCountOnClient ?? 1;
 
-  // Adjust currentIndex if it becomes invalid after resize or if visibleCardsCount changes
   useEffect(() => {
     if (totalProjects > 0 && currentVisibleCards > 0) {
       const maxPossibleIndex = Math.max(0, totalProjects - currentVisibleCards);
       if (currentIndex > maxPossibleIndex) {
         setCurrentIndex(maxPossibleIndex);
-      } else if (currentIndex < 0) { // Should not happen with current logic, but as a safeguard
+      } else if (currentIndex < 0) { 
         setCurrentIndex(0);
       }
     }
@@ -68,11 +61,10 @@ const ProjectsSection = () => {
   }, []);
 
   const handleNext = useCallback(() => {
-    if (totalProjects <= currentVisibleCards) return; // No sliding if all cards fit or fewer than fit
+    if (totalProjects <= currentVisibleCards) return; 
 
     setCurrentIndex((prevIndex) => {
       const nextIndexCandidate = prevIndex + 1;
-      // If next index would cause the view to go past the last possible full set of cards, loop to 0
       if (nextIndexCandidate > totalProjects - currentVisibleCards) {
         return 0;
       }
@@ -82,7 +74,7 @@ const ProjectsSection = () => {
 
   useEffect(() => {
     resetTimeout();
-    if (!isPaused && totalProjects > currentVisibleCards) { // Only auto-slide if there's something to slide
+    if (!isPaused && totalProjects > currentVisibleCards) { 
       timeoutRef.current = setTimeout(handleNext, AUTO_SLIDE_INTERVAL);
     }
     return () => {
@@ -95,7 +87,6 @@ const ProjectsSection = () => {
 
     setCurrentIndex((prevIndex) => {
       const prevIndexCandidate = prevIndex - 1;
-      // If previous index is less than 0, loop to the last possible starting index
       if (prevIndexCandidate < 0) {
         return Math.max(0, totalProjects - currentVisibleCards);
       }
@@ -105,7 +96,7 @@ const ProjectsSection = () => {
 
   if (!projectsData || totalProjects === 0) {
     return (
-      <SectionWrapper id="projects" className="bg-secondary section-fade-in" style={{ animationDelay: '0.4s' }}>
+      <SectionWrapper id="projects" className="bg-background section-fade-in" style={{ animationDelay: '0.4s' }}>
         <SectionTitle subtitle="A selection of my recent work.">
           Featured Projects
         </SectionTitle>
@@ -114,12 +105,10 @@ const ProjectsSection = () => {
     );
   }
   
-  // On server & initial client render (pre-useEffect), currentVisibleCards is 1, so cardWidthPercentage is 100.
-  // After useEffect on client, currentVisibleCards updates, and so does cardWidthPercentage.
   const cardWidthPercentage = currentVisibleCards > 0 ? 100 / currentVisibleCards : 100;
 
   return (
-    <SectionWrapper id="projects" className="bg-secondary section-fade-in" style={{ animationDelay: '0.4s' }}>
+    <SectionWrapper id="projects" className="bg-background section-fade-in" style={{ animationDelay: '0.4s' }}>
       <SectionTitle subtitle="A selection of my recent work, showcasing my skills in creating engaging and functional digital experiences.">
         Featured Projects
       </SectionTitle>
@@ -143,8 +132,6 @@ const ProjectsSection = () => {
                 className="flex-shrink-0 p-1 md:p-2 box-border" 
                 style={{ width: `${cardWidthPercentage}%` }}
                 role="listitem"
-                // On server/initial client render: currentVisibleCards = 1. Only first card visible.
-                // After client hydration & effect: currentVisibleCards reflects actual screen size.
                 aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
               >
                 <ProjectCard project={project} />
@@ -153,7 +140,6 @@ const ProjectsSection = () => {
           </div>
         </div>
 
-        {/* Buttons are only rendered client-side after visibleCardsCountOnClient is determined */}
         {visibleCardsCountOnClient !== null && totalProjects > currentVisibleCards && (
           <>
             <Button
@@ -182,3 +168,4 @@ const ProjectsSection = () => {
 };
 
 export default ProjectsSection;
+
