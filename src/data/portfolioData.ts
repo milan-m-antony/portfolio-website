@@ -95,6 +95,7 @@ export const projectsData: Project[] = [
     imageUrl: 'https://picsum.photos/seed/project4/600/400',
     imageHint: 'data dashboard charts',
     liveDemoUrl: '#',
+    repoUrl: '#', // Added repoUrl
     tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
     status: 'Completed',
   },
@@ -104,6 +105,7 @@ export const projectsData: Project[] = [
     description: 'A scalable chat application built with Node.js, Socket.IO, and React. Supports multiple rooms and private messaging.',
     imageUrl: 'https://picsum.photos/seed/project5/600/400',
     imageHint: 'chat interface',
+    liveDemoUrl: '#', // Added liveDemoUrl
     repoUrl: '#',
     tags: ['Node.js', 'Socket.IO', 'React', 'MongoDB', 'Real-time'],
     status: 'Deployed',
