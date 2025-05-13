@@ -27,6 +27,92 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const currentStatusConfig = statusConfig[project.status];
   const isActionable = project.status === 'Deployed' || project.status === 'Completed';
 
+  let liveDemoButton = null;
+  if (project.liveDemoUrl) {
+    if (isActionable) {
+      liveDemoButton = (
+        <Button asChild variant="outline" className="flex-1">
+          <Link href={project.liveDemoUrl} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+          </Link>
+        </Button>
+      );
+    } else { // Has URL, but not actionable (e.g., In Progress with demo link)
+      liveDemoButton = (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="flex-1" disabled>
+                <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Demo for project under development.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+  } else { // No liveDemoUrl
+    liveDemoButton = (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" className="flex-1" disabled>
+              <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Live demo not available.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  let sourceCodeButton = null;
+  if (project.repoUrl) {
+    if (isActionable) {
+      sourceCodeButton = (
+        <Button asChild variant="outline" className="flex-1 hover:bg-accent/10 hover:text-accent-foreground transition-colors duration-300">
+          <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer">
+            <Github className="mr-2 h-4 w-4" /> Source Code
+          </Link>
+        </Button>
+      );
+    } else { // Has repo URL, but not actionable
+      sourceCodeButton = (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" className="flex-1" disabled>
+                <Github className="mr-2 h-4 w-4" /> Source Code
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Source code may be private or project under development.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+  } else { // No repoUrl
+    sourceCodeButton = (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" className="flex-1" disabled>
+              <Github className="mr-2 h-4 w-4" /> Source Code
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Source code not available.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg bg-card transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.015]">
       <div className="relative w-full h-48 md:h-56 group">
@@ -75,80 +161,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </CardContent>
       <CardFooter className="mt-auto pt-0">
         <div className="flex gap-2 w-full">
-          {project.liveDemoUrl ? (
-            isActionable ? (
-              <Button asChild variant="outline" className="flex-1">
-                <Link href={project.liveDemoUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                </Link>
-              </Button>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" className="flex-1" disabled>
-                      <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>This project is under development.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )
-          ) : ( // Render disabled button even if no URL, if not actionable
-             !isActionable && (
-                <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" className="flex-1" disabled>
-                      <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>This project is under development.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-             )
-          )}
-          {project.repoUrl ? (
-            isActionable ? (
-              <Button asChild variant="secondary" className="flex-1">
-                <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer">
-                  <Github className="mr-2 h-4 w-4" /> Source Code
-                </Link>
-              </Button>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="secondary" className="flex-1" disabled>
-                      <Github className="mr-2 h-4 w-4" /> Source Code
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>This project is under development.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )
-          ) : ( // Render disabled button even if no URL, if not actionable
-            !isActionable && (
-                 <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="secondary" className="flex-1" disabled>
-                      <Github className="mr-2 h-4 w-4" /> Source Code
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>This project is under development.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )
-          )}
+          {liveDemoButton}
+          {sourceCodeButton}
         </div>
       </CardFooter>
     </Card>

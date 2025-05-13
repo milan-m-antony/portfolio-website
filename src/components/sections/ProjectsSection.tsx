@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -13,7 +12,7 @@ import type { Project } from '@/data/portfolioData';
 const AUTO_SLIDE_INTERVAL = 5000; // 5 seconds
 
 const getResponsiveVisibleCardsCount = () => {
-  if (typeof window === 'undefined') return 1; // Default for SSR
+  if (typeof window === 'undefined') return 1; // Default for SSR, will be updated on client
   if (window.innerWidth >= 1024) return 3; // lg and up: 3 cards
   if (window.innerWidth >= 768) return 2;  // md: 2 cards
   return 1; // sm and down: 1 card
@@ -24,11 +23,12 @@ const ProjectsSection = () => {
   const [isPaused, setIsPaused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null);
+  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null); // Initialize as null
 
   const totalProjects = projectsData.length;
 
   useEffect(() => {
+    // This effect runs only on the client after hydration
     const calculateAndSetVisibleCards = () => {
       const count = getResponsiveVisibleCardsCount();
       setVisibleCardsCountOnClient(count);
@@ -40,7 +40,8 @@ const ProjectsSection = () => {
     return () => window.removeEventListener('resize', calculateAndSetVisibleCards);
   }, []); 
 
-  const currentVisibleCards = visibleCardsCountOnClient ?? 1;
+  // Use visibleCardsCountOnClient for rendering, defaulting to 1 if still null (initial server render or before effect runs)
+  const currentVisibleCards = visibleCardsCountOnClient ?? 1; 
 
   useEffect(() => {
     if (totalProjects > 0 && currentVisibleCards > 0) {
@@ -65,8 +66,10 @@ const ProjectsSection = () => {
 
     setCurrentIndex((prevIndex) => {
       const nextIndexCandidate = prevIndex + 1;
+      // If next slide would show fewer than currentVisibleCards (because we're at the end)
+      // and we want to loop, go to 0. Otherwise, cap at the last possible full slide.
       if (nextIndexCandidate > totalProjects - currentVisibleCards) {
-        return 0;
+        return 0; // Loop to the beginning
       }
       return nextIndexCandidate;
     });
@@ -88,6 +91,7 @@ const ProjectsSection = () => {
     setCurrentIndex((prevIndex) => {
       const prevIndexCandidate = prevIndex - 1;
       if (prevIndexCandidate < 0) {
+        // If prev would go before start, loop to the end (last possible full slide)
         return Math.max(0, totalProjects - currentVisibleCards);
       }
       return prevIndexCandidate;
@@ -105,6 +109,7 @@ const ProjectsSection = () => {
     );
   }
   
+  // Calculate card width based on the client-determined visible count, or default during SSR/initial load
   const cardWidthPercentage = currentVisibleCards > 0 ? 100 / currentVisibleCards : 100;
 
   return (
@@ -121,25 +126,36 @@ const ProjectsSection = () => {
         onTouchEnd={() => setIsPaused(false)}  
       >
         <div className="overflow-hidden rounded-lg">
-          <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${currentIndex * cardWidthPercentage}%)` }}
-            role="list"
-          >
-            {projectsData.map((project: Project, index: number) => (
-              <div
-                key={project.id}
-                className="flex-shrink-0 p-1 md:p-2 box-border" 
-                style={{ width: `${cardWidthPercentage}%` }}
-                role="listitem"
-                aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
-              >
-                <ProjectCard project={project} />
-              </div>
-            ))}
-          </div>
+          {/* Conditional rendering: Only render the slider content if visibleCardsCountOnClient is set (client-side) */}
+          {visibleCardsCountOnClient !== null ? (
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * (100 / currentVisibleCards)}%)` }} // Recalculate transform based on currentVisibleCards
+              role="list"
+            >
+              {projectsData.map((project: Project, index: number) => (
+                <div
+                  key={project.id}
+                  className="flex-shrink-0 p-1 md:p-2 box-border" 
+                  style={{ width: `${cardWidthPercentage}%` }}
+                  role="listitem"
+                  aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
+                >
+                  <ProjectCard project={project} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Placeholder for SSR or before client-side calculation (optional, or render a single card, or a loader)
+            // For now, let's render a basic placeholder or nothing to avoid mismatch
+            <div className="flex justify-center items-center h-96">
+              {/* You could put a spinner or a single placeholder card here */}
+               <p className="text-muted-foreground">Loading projects...</p>
+            </div>
+          )}
         </div>
 
+        {/* Render buttons only if client-side calculation is done and there are enough projects */}
         {visibleCardsCountOnClient !== null && totalProjects > currentVisibleCards && (
           <>
             <Button
@@ -168,4 +184,3 @@ const ProjectsSection = () => {
 };
 
 export default ProjectsSection;
-

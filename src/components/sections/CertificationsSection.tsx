@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,7 +21,7 @@ import {
 const AUTO_SLIDE_INTERVAL = 5000; // 5 seconds
 
 const getResponsiveVisibleCardsCount = () => {
-  if (typeof window === 'undefined') return 1;
+  if (typeof window === 'undefined') return 1; // Default for SSR
   if (window.innerWidth >= 1280) return 3; // xl and up: 3 cards
   if (window.innerWidth >= 768) return 2;  // md to lg: 2 cards
   return 1; // sm and down: 1 card
@@ -32,7 +31,7 @@ export default function CertificationsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null);
+  const [visibleCardsCountOnClient, setVisibleCardsCountOnClient] = useState<number | null>(null); // Initialize as null
   
   const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +39,7 @@ export default function CertificationsSection() {
   const totalCertifications = certificationsData.length;
 
   useEffect(() => {
+    // This effect runs only on the client after hydration
     const calculateAndSetVisibleCards = () => {
       const count = getResponsiveVisibleCardsCount();
       setVisibleCardsCountOnClient(count);
@@ -50,7 +50,7 @@ export default function CertificationsSection() {
     return () => window.removeEventListener('resize', calculateAndSetVisibleCards);
   }, []);
 
-  const currentVisibleCards = visibleCardsCountOnClient ?? 1;
+  const currentVisibleCards = visibleCardsCountOnClient ?? 1; // Default to 1 for SSR
 
   useEffect(() => {
     if (totalCertifications > 0 && currentVisibleCards > 0) {
@@ -133,28 +133,36 @@ export default function CertificationsSection() {
         onTouchEnd={() => setIsPaused(false)}
       >
         <div className="overflow-hidden rounded-lg">
-          <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${currentIndex * cardWidthPercentage}%)` }}
-            role="list"
-          >
-            {certificationsData.map((cert, index) => (
-              <div
-                key={cert.id}
-                className="flex-shrink-0 p-1 md:p-2 box-border"
-                style={{ width: `${cardWidthPercentage}%` }}
-                role="listitem"
-                aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
-              >
-                <CertificationCard 
-                  certification={cert} 
-                  onClick={() => handleCertificationClick(cert)} 
-                />
-              </div>
-            ))}
-          </div>
+          {/* Conditional rendering: Only render the slider content if visibleCardsCountOnClient is set (client-side) */}
+          {visibleCardsCountOnClient !== null ? (
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * (100 / currentVisibleCards)}%)` }} // Recalculate transform
+              role="list"
+            >
+              {certificationsData.map((cert, index) => (
+                <div
+                  key={cert.id}
+                  className="flex-shrink-0 p-1 md:p-2 box-border"
+                  style={{ width: `${cardWidthPercentage}%` }}
+                  role="listitem"
+                  aria-hidden={!(index >= currentIndex && index < currentIndex + currentVisibleCards)}
+                >
+                  <CertificationCard 
+                    certification={cert} 
+                    onClick={() => handleCertificationClick(cert)} 
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-80"> {/* Adjusted height for certification cards */}
+               <p className="text-muted-foreground">Loading certifications...</p>
+            </div>
+          )}
         </div>
 
+        {/* Render buttons only if client-side calculation is done and there are enough certifications */}
         {visibleCardsCountOnClient !== null && totalCertifications > currentVisibleCards && (
           <>
             <Button
