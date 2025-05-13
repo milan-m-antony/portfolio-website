@@ -85,6 +85,7 @@ export const projectsData: Project[] = [
     description: 'Cross-platform mobile app for tracking workouts and nutrition. Developed using React Native and Firebase.',
     imageUrl: 'https://picsum.photos/seed/project3/600/400',
     imageHint: 'fitness app',
+    liveDemoUrl: '#', // Added live demo for this application project
     tags: ['React Native', 'Firebase', 'Mobile App'],
     status: 'Prototype',
   },
@@ -94,8 +95,7 @@ export const projectsData: Project[] = [
     description: 'An interactive dashboard for visualizing complex datasets using D3.js and React. Features various chart types and filtering options.',
     imageUrl: 'https://picsum.photos/seed/project4/600/400',
     imageHint: 'data dashboard charts',
-    liveDemoUrl: '#',
-    repoUrl: '#', // Added repoUrl
+    repoUrl: '#', 
     tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
     status: 'Completed',
   },
@@ -105,7 +105,7 @@ export const projectsData: Project[] = [
     description: 'A scalable chat application built with Node.js, Socket.IO, and React. Supports multiple rooms and private messaging.',
     imageUrl: 'https://picsum.photos/seed/project5/600/400',
     imageHint: 'chat interface',
-    liveDemoUrl: '#', // Added liveDemoUrl
+    liveDemoUrl: '#', 
     repoUrl: '#',
     tags: ['Node.js', 'Socket.IO', 'React', 'MongoDB', 'Real-time'],
     status: 'Deployed',
@@ -249,38 +249,79 @@ export const skillsData: SkillCategory[] = [
 
 export const timelineData: TimelineEvent[] = [
   {
-    id: '1',
-    date: 'Jan 2023 - Present',
-    title: 'Creative Developer',
-    description: 'Developing innovative web and mobile solutions for various clients. Specializing in full-stack development and UI/UX design.',
+    id: 'ev1',
+    date: 'Present',
+    title: 'Personal Projects Development',
+    description: 'Working on projects like Online Diagnostic Lab, Cloud Management, and this portfolio.',
+    icon: Lightbulb,
+    type: 'milestone',
+  },
+  {
+    id: 'ev2',
+    date: 'June – Dec 2024',
+    title: 'Network Engineering Diploma & Training',
+    description: 'Enrolled in Diploma program and Network Support Engineer training at SMEC LABS, Kochi.',
     icon: Briefcase,
     type: 'work',
   },
   {
-    id: '2',
-    date: 'Aug 2019 - Dec 2022',
-    title: 'B.Sc. in Computer Science',
-    description: 'Graduated with honors from University of Technology. Focused on software engineering and artificial intelligence.',
-    icon: GraduationCap,
-    type: 'education',
-  },
-  {
-    id: '3',
-    date: 'Mar 2023',
-    title: 'Azure Fundamentals Certified',
-    description: 'Achieved Microsoft Certified: Azure Fundamentals certification, demonstrating foundational knowledge of cloud services.',
+    id: 'ev3',
+    date: 'Dec 2024 (Expected)',
+    title: 'Expected Certifications (CCNA, MCSE, Azure Admin)',
+    description: 'Completing intensive training and certification exams for CCNA, MCSE, and Azure Administrator at SMEC.',
     icon: Award,
     type: 'certification',
   },
   {
-    id: '4',
-    date: 'Jun 2021',
-    title: 'Lead Developer - Capstone Project',
-    description: 'Led a team of 4 to develop an award-winning AI-driven recommendation engine for our final year project.',
+    id: 'ev4',
+    date: '2024',
+    title: 'Graduated BCA',
+    description: 'Completed Bachelor of Computer Applications from B.V.M. Holy Cross College.',
+    icon: GraduationCap,
+    type: 'education',
+  },
+  {
+    id: 'ev5',
+    date: '2021 – 2024',
+    title: 'BCA Studies',
+    description: 'Studied Computer Applications at B.V.M. Holy Cross College, Cherpunkal.',
+    icon: GraduationCap,
+    type: 'education',
+  },
+  {
+    id: 'ev6',
+    date: '2021',
+    title: 'Started University Journey (BCA)',
+    description: "Began Bachelor's degree in Computer Applications at B.V.M. Holy Cross College.",
+    icon: GraduationCap,
+    type: 'education',
+  },
+  {
+    id: 'ev7',
+    date: '2019 – 2021',
+    title: 'Higher Secondary Education (Computer Science)',
+    description: 'Completed Higher Secondary (Computer Science stream) at St. Thomas HSS, Erumely.',
+    icon: Laptop,
+    type: 'education',
+  },
+  {
+    id: 'ev8',
+    date: '2019 - 2020',
+    title: 'State-Level Work Exhibition',
+    description: 'Participated by designing and presenting a multi-purpose rescue vehicle concept.',
     icon: Star,
     type: 'milestone',
   },
+  {
+    id: 'ev9',
+    date: '2018 – 2019',
+    title: 'High School Education',
+    description: 'Completed High School at St. Mary’s HS, Umikuppa.',
+    icon: GraduationCap,
+    type: 'education',
+  },
 ];
+
 
 export const certificationsData: Certification[] = [
   {
@@ -288,7 +329,7 @@ export const certificationsData: Certification[] = [
     title: 'Microsoft Certified: Azure Fundamentals',
     issuer: 'Microsoft',
     date: 'March 2023',
-    imageUrl: 'https://picsum.photos/seed/cert1/300/200',
+    imageUrl: 'https://picsum.photos/seed/cert1/600/400', // Larger image for modal
     imageHint: 'azure certificate',
     verifyUrl: '#',
   },
@@ -297,7 +338,7 @@ export const certificationsData: Certification[] = [
     title: 'Full-Stack Web Development Bootcamp',
     issuer: 'Udemy',
     date: 'July 2022',
-    imageUrl: 'https://picsum.photos/seed/cert2/300/200',
+    imageUrl: 'https://picsum.photos/seed/cert2/600/400', // Larger image for modal
     imageHint: 'web development',
     verifyUrl: '#',
   },
@@ -306,8 +347,25 @@ export const certificationsData: Certification[] = [
     title: 'Data Science Specialization',
     issuer: 'Coursera (Johns Hopkins University)',
     date: 'May 2021',
-    imageUrl: 'https://picsum.photos/seed/cert3/300/200',
+    imageUrl: 'https://picsum.photos/seed/cert3/600/400', // Larger image for modal
     imageHint: 'data science',
+  },
+  {
+    id: '4',
+    title: 'Python for Everybody Specialization',
+    issuer: 'Coursera (University of Michigan)',
+    date: 'January 2022',
+    imageUrl: 'https://picsum.photos/seed/cert4/600/400',
+    imageHint: 'python programming',
+    verifyUrl: '#',
+  },
+  {
+    id: '5',
+    title: 'Google IT Support Professional Certificate',
+    issuer: 'Coursera (Google)',
+    date: 'September 2021',
+    imageUrl: 'https://picsum.photos/seed/cert5/600/400',
+    imageHint: 'it support',
   },
 ];
 
@@ -321,3 +379,4 @@ export const navLinks = [
   { href: "#resume", label: "Resume" },
   { href: "#contact", label: "Contact" },
 ];
+
