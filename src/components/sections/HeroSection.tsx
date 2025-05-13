@@ -68,10 +68,6 @@ export default function HeroSection() {
         <p className="text-2xl sm:text-3xl md:text-4xl font-light mb-8 text-foreground/90">
           <Typewriter text="— a Creative Developer" speed={75} />
         </p>
-        {/* Removed Scroll to explore button */}
-      </div>
-       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-        <ArrowDown className="h-8 w-8 text-foreground/70 animate-bounce" />
       </div>
     </section>
   );
