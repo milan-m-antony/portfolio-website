@@ -42,36 +42,8 @@ export default function HeroSection() {
 
   return (
     <section id="hero" className="relative h-screen flex flex-col items-center justify-center overflow-hidden text-center bg-background text-foreground p-4">
-      {/* Parallax Background Layers */}
-      <div
-        className="absolute inset-0 z-0 opacity-30"
-        style={{ transform: `translateY(${offsetY * 0.3}px)` }}
-      >
-        <Image
-          src="https://picsum.photos/seed/parallaxbg1/1920/1080"
-          alt="Abstract background layer 1"
-          layout="fill"
-          objectFit="cover"
-          quality={75}
-          priority
-          data-ai-hint="abstract background"
-        />
-      </div>
-       <div
-        className="absolute inset-0 z-[1] opacity-20"
-        style={{ transform: `translateY(${offsetY * 0.15}px)` }}
-      >
-        <Image
-          src="https://picsum.photos/seed/parallaxbg2/1920/1080"
-          alt="Abstract background layer 2"
-          layout="fill"
-          objectFit="cover"
-          quality={75}
-          priority
-          data-ai-hint="geometric pattern"
-        />
-      </div>
-
+      {/* Parallax Background Layers Removed */}
+      
       {/* Social Media Icons */}
       <div className="absolute left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 flex flex-col space-y-4">
         {socialLinks.map((social) => (
@@ -115,3 +87,4 @@ export default function HeroSection() {
     </section>
   );
 }
+
