@@ -1,4 +1,3 @@
-
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import TimelineItem from '@/components/ui/TimelineItem';
@@ -13,7 +12,9 @@ export default function TimelineSection() {
       <div className="relative wrap overflow-hidden p-2 md:p-10 h-full">
         <div className="absolute border-opacity-20 border-border h-full border" style={{ left: '50%' }}></div>
         {timelineData.map((event, index) => (
-          <div key={event.id} className="animate-fadeIn" style={{animationDelay: `${index * 0.2}s`}}>
+          // Removed animate-fadeIn class and animationDelay style from this div
+          // TimelineItem now handles its own reveal animation
+          <div key={event.id}>
             <TimelineItem event={event} isLeft={index % 2 !== 0} />
           </div>
         ))}

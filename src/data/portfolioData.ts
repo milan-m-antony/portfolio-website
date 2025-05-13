@@ -42,9 +42,22 @@ export interface TimelineEvent {
   date: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  iconName: keyof typeof IconMap; // Changed from LucideIcon to string key
   type: 'work' | 'education' | 'certification' | 'milestone';
 }
+
+// Define IconMap here or ensure it's available where TimelineEvent is used.
+// For simplicity, we'll assume TimelineItem.tsx will handle mapping.
+// This map would ideally be in a shared location or within TimelineItem.
+const IconMap = {
+  Lightbulb,
+  Briefcase,
+  Award,
+  GraduationCap,
+  Laptop,
+  Star,
+};
+
 
 export interface Certification {
   id: string;
@@ -85,7 +98,7 @@ export const projectsData: Project[] = [
     description: 'Cross-platform mobile app for tracking workouts and nutrition. Developed using React Native and Firebase.',
     imageUrl: 'https://picsum.photos/seed/project3/600/400',
     imageHint: 'fitness app',
-    liveDemoUrl: '#', // Added live demo for this application project
+    liveDemoUrl: '#', 
     tags: ['React Native', 'Firebase', 'Mobile App'],
     status: 'Prototype',
   },
@@ -253,7 +266,7 @@ export const timelineData: TimelineEvent[] = [
     date: 'Present',
     title: 'Personal Projects Development',
     description: 'Working on projects like Online Diagnostic Lab, Cloud Management, and this portfolio.',
-    icon: Lightbulb,
+    iconName: 'Lightbulb',
     type: 'milestone',
   },
   {
@@ -261,7 +274,7 @@ export const timelineData: TimelineEvent[] = [
     date: 'June – Dec 2024',
     title: 'Network Engineering Diploma & Training',
     description: 'Enrolled in Diploma program and Network Support Engineer training at SMEC LABS, Kochi.',
-    icon: Briefcase,
+    iconName: 'Briefcase',
     type: 'work',
   },
   {
@@ -269,7 +282,7 @@ export const timelineData: TimelineEvent[] = [
     date: 'Dec 2024 (Expected)',
     title: 'Expected Certifications (CCNA, MCSE, Azure Admin)',
     description: 'Completing intensive training and certification exams for CCNA, MCSE, and Azure Administrator at SMEC.',
-    icon: Award,
+    iconName: 'Award',
     type: 'certification',
   },
   {
@@ -277,7 +290,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2024',
     title: 'Graduated BCA',
     description: 'Completed Bachelor of Computer Applications from B.V.M. Holy Cross College.',
-    icon: GraduationCap,
+    iconName: 'GraduationCap',
     type: 'education',
   },
   {
@@ -285,7 +298,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2021 – 2024',
     title: 'BCA Studies',
     description: 'Studied Computer Applications at B.V.M. Holy Cross College, Cherpunkal.',
-    icon: GraduationCap,
+    iconName: 'GraduationCap',
     type: 'education',
   },
   {
@@ -293,7 +306,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2021',
     title: 'Started University Journey (BCA)',
     description: "Began Bachelor's degree in Computer Applications at B.V.M. Holy Cross College.",
-    icon: GraduationCap,
+    iconName: 'GraduationCap',
     type: 'education',
   },
   {
@@ -301,7 +314,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2019 – 2021',
     title: 'Higher Secondary Education (Computer Science)',
     description: 'Completed Higher Secondary (Computer Science stream) at St. Thomas HSS, Erumely.',
-    icon: Laptop,
+    iconName: 'Laptop',
     type: 'education',
   },
   {
@@ -309,7 +322,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2019 - 2020',
     title: 'State-Level Work Exhibition',
     description: 'Participated by designing and presenting a multi-purpose rescue vehicle concept.',
-    icon: Star,
+    iconName: 'Star',
     type: 'milestone',
   },
   {
@@ -317,7 +330,7 @@ export const timelineData: TimelineEvent[] = [
     date: '2018 – 2019',
     title: 'High School Education',
     description: 'Completed High School at St. Mary’s HS, Umikuppa.',
-    icon: GraduationCap,
+    iconName: 'GraduationCap',
     type: 'education',
   },
 ];
@@ -329,7 +342,7 @@ export const certificationsData: Certification[] = [
     title: 'Microsoft Certified: Azure Fundamentals',
     issuer: 'Microsoft',
     date: 'March 2023',
-    imageUrl: 'https://picsum.photos/seed/cert1/600/400', // Larger image for modal
+    imageUrl: 'https://picsum.photos/seed/cert1/600/400', 
     imageHint: 'azure certificate',
     verifyUrl: '#',
   },
@@ -338,7 +351,7 @@ export const certificationsData: Certification[] = [
     title: 'Full-Stack Web Development Bootcamp',
     issuer: 'Udemy',
     date: 'July 2022',
-    imageUrl: 'https://picsum.photos/seed/cert2/600/400', // Larger image for modal
+    imageUrl: 'https://picsum.photos/seed/cert2/600/400', 
     imageHint: 'web development',
     verifyUrl: '#',
   },
@@ -347,7 +360,7 @@ export const certificationsData: Certification[] = [
     title: 'Data Science Specialization',
     issuer: 'Coursera (Johns Hopkins University)',
     date: 'May 2021',
-    imageUrl: 'https://picsum.photos/seed/cert3/600/400', // Larger image for modal
+    imageUrl: 'https://picsum.photos/seed/cert3/600/400', 
     imageHint: 'data science',
   },
   {
@@ -379,4 +392,3 @@ export const navLinks = [
   { href: "#resume", label: "Resume" },
   { href: "#contact", label: "Contact" },
 ];
-
