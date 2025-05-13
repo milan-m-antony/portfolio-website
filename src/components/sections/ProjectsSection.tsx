@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -43,7 +44,7 @@ const ProjectsSection = () => {
   const visibleProjects = getVisibleProjects();
 
   return (
-    <SectionWrapper id="projects" className="bg-secondary section-fade-in" style={{ animationDelay: '0.2s' }}>
+    <SectionWrapper id="projects" className="bg-secondary section-fade-in" style={{ animationDelay: '0.4s' }}>
       <SectionTitle subtitle="A selection of my recent work, showcasing my skills in creating engaging and functional digital experiences.">
         Featured Projects
       </SectionTitle>

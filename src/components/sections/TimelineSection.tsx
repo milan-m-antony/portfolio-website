@@ -1,3 +1,4 @@
+
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import TimelineItem from '@/components/ui/TimelineItem';
@@ -5,7 +6,7 @@ import { timelineData } from '@/data/portfolioData';
 
 export default function TimelineSection() {
   return (
-    <SectionWrapper id="timeline" className="bg-background section-fade-in" style={{ animationDelay: '0.6s' }}>
+    <SectionWrapper id="timeline" className="bg-background section-fade-in" style={{ animationDelay: '0.8s' }}>
       <SectionTitle subtitle="Follow my professional and educational path, highlighting key experiences and achievements along the way.">
         My Career Journey
       </SectionTitle>

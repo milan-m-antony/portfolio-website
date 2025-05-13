@@ -1,9 +1,11 @@
+
 import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase, GraduationCap, Award, Code, Laptop, Database, Brain, Settings, Users, Star, GitMerge, Server, Palette, MessageSquare, Users2, Clock, Target, Cloud, PenTool, Film, BarChart2, BookOpen, FileText,
   Terminal, GitFork, Figma, FileCode, Package, Layers3, Orbit, Wind, GalleryThumbnails, Webhook, Route, Coffee, Binary, CodeXml, FileJson2, FileBadge2, DatabaseZap, Cpu, Network, Share2, Activity, ShieldCheck, Lightbulb, Workflow, Sparkles, TestTube2,
-  Smartphone, Bot, ServerCog, CloudCog, DatabaseBackup, FolderGit2, Blocks, Anchor, Atom, AppWindow, BookMarked, Puzzle,
-} from 'lucide-react';
+  Smartphone, Bot, ServerCog, CloudCog, DatabaseBackup, FolderGit2, Blocks, Anchor, Atom, AppWindow, BookMarked, Puzzle, BookHeart,
+  Braces, SquareCode, Link, DatabaseIcon as SqlDatabase, BrainCircuit, Settings2, CircleUser, CheckCircle, Zap, DraftingCompass, Video, GanttChartSquare, Edit3, DownloadCloud, FolderKanban, UserCog,
+} from 'lucide-react'; // Added more icons
 
 export interface Project {
   id: string;
@@ -82,12 +84,12 @@ export const projectsData: Project[] = [
 export const skillsData: SkillCategory[] = [
   {
     name: 'Programming Languages',
-    icon: Code,
+    icon: Braces, // Changed from Code
     iconColor: 'text-sky-500',
     skills: [
-      { name: 'Python', icon: CodeXml, description: 'Versatile language for web, data science, and AI.' },
-      { name: 'JavaScript', icon: FileJson2, description: 'Core language for web interactivity and full-stack development.' },
-      { name: 'TypeScript', icon: FileBadge2, description: 'Superset of JavaScript adding static types for robust applications.' },
+      { name: 'Python', icon: SquareCode, description: 'Versatile language for web, data science, and AI.' }, // Changed
+      { name: 'JavaScript', icon: SquareCode, description: 'Core language for web interactivity and full-stack development.' }, // Changed
+      { name: 'TypeScript', icon: SquareCode, description: 'Superset of JavaScript adding static types for robust applications.' }, // Changed
       { name: 'Java', icon: Coffee, description: 'Widely-used, object-oriented language for enterprise applications.' },
       { name: 'C / C++', icon: Binary, description: 'Powerful languages for system programming and performance-critical tasks.' },
       { name: 'HTML / CSS', icon: Palette, description: 'Fundamental technologies for structuring and styling web content.' },
@@ -102,7 +104,7 @@ export const skillsData: SkillCategory[] = [
       { name: 'Next.js', icon: Layers3, description: 'React framework for server-side rendering and static site generation.' },
       { name: 'Node.js', icon: Package, description: 'JavaScript runtime for building server-side applications.' },
       { name: 'Express.js', icon: Route, description: 'Minimalist web framework for Node.js.' },
-      { name: 'RESTful APIs', icon: Webhook, description: 'Designing and implementing scalable web services.' },
+      { name: 'RESTful APIs', icon: Link, description: 'Designing and implementing scalable web services.' }, // Changed from Webhook
       { name: 'Tailwind CSS', icon: Wind, description: 'Utility-first CSS framework for rapid UI development.' },
       { name: 'Bootstrap', icon: GalleryThumbnails, description: 'Popular front-end framework for responsive web design.' },
     ],
@@ -130,18 +132,18 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Databases',
-    icon: Database,
+    icon: Database, // Using generic Database icon for category
     iconColor: 'text-yellow-500',
     skills: [
       { name: 'MongoDB', icon: DatabaseZap, description: 'NoSQL document-oriented database.' },
-      { name: 'MySQL', icon: DatabaseBackup, description: 'Popular open-source relational database.' },
-      { name: 'PostgreSQL', icon: Database, description: 'Powerful open-source object-relational database system.' },
+      { name: 'MySQL', icon: SqlDatabase, description: 'Popular open-source relational database.' }, // Changed
+      { name: 'PostgreSQL', icon: SqlDatabase, description: 'Powerful open-source object-relational database system.' }, // Changed
       { name: 'SQLite', icon: FileText, description: 'Lightweight, file-based relational database.' },
     ],
   },
   {
     name: 'AI / ML / Data',
-    icon: Brain,
+    icon: BrainCircuit, // Changed from Brain
     iconColor: 'text-red-500',
     skills: [
       { name: 'Pandas', icon: BarChart2, description: 'Data manipulation and analysis library for Python.' },
@@ -155,14 +157,14 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Tools & Platforms',
-    icon: Settings,
+    icon: Settings2, // Changed from Settings
     iconColor: 'text-indigo-500',
     skills: [
       { name: 'Git', icon: GitFork, description: 'Distributed version control system.' },
       { name: 'GitHub', icon: FolderGit2, description: 'Web-based platform for version control and collaboration using Git.' },
       { name: 'VS Code', icon: FileCode, description: 'Popular source code editor with extensive features.' },
       { name: 'Figma', icon: Figma, description: 'Collaborative interface design tool.' },
-      { name: 'Adobe XD', icon: PenTool, description: 'Vector-based UI/UX design tool for web and mobile apps.' },
+      { name: 'Adobe XD', icon: DraftingCompass, description: 'Vector-based UI/UX design tool for web and mobile apps.' }, // Changed
       { name: 'Postman', icon: Network, description: 'API platform for building and using APIs.' },
       { name: 'Linux', icon: Terminal, description: 'Open-source operating system widely used in servers and development.' },
       { name: 'WSL', icon: Laptop, description: 'Windows Subsystem for Linux for running Linux environments on Windows.' },
@@ -171,7 +173,7 @@ export const skillsData: SkillCategory[] = [
   },
   {
     name: 'Soft Skills',
-    icon: Users,
+    icon: CircleUser, // Changed from Users
     iconColor: 'text-teal-500',
     skills: [
       { name: 'Problem Solving', icon: Lightbulb, description: 'Identifying issues and implementing effective solutions.' },
@@ -182,6 +184,7 @@ export const skillsData: SkillCategory[] = [
     ],
   },
 ];
+
 
 export const timelineData: TimelineEvent[] = [
   {
@@ -249,6 +252,7 @@ export const certificationsData: Certification[] = [
 
 export const navLinks = [
   { href: "#hero", label: "Home" },
+  { href: "#about", label: "About" },
   { href: "#projects", label: "Projects" },
   { href: "#skills", label: "Skills" },
   { href: "#timeline", label: "Journey" },

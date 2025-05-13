@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider'; // Corrected import path
 
 const navItems = [
+  { href: '#about', label: 'About' },
   { href: '#projects', label: 'Projects' },
   { href: '#skills', label: 'Skills' },
   { href: '#timeline', label: 'Journey' },
@@ -36,7 +38,7 @@ export default function Header() {
           key={item.label}
           href={item.href}
           onClick={onClick}
-          className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors px-3 py-2 rounded-md"
+          className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 ease-in-out px-3 py-2 rounded-md hover:bg-accent/50"
         >
           {item.label}
         </Link>
@@ -64,11 +66,11 @@ export default function Header() {
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open menu">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="transition-transform duration-300 ease-in-out hover:rotate-90">
+                  {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0">
+              <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0 transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-right-full">
                 <div className="p-6">
                    <Link href="/" className="flex items-center gap-2 mb-6" onClick={() => setIsMobileMenuOpen(false)}>
                       <Code2 className="h-7 w-7 text-primary" />

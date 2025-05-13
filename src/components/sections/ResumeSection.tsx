@@ -1,3 +1,4 @@
+
 "use client";
 
 import SectionWrapper from '@/components/ui/SectionWrapper';
@@ -13,7 +14,7 @@ export default function ResumeSection() {
   };
 
   return (
-    <SectionWrapper id="resume" className="section-fade-in" style={{ animationDelay: '1.0s' }}>
+    <SectionWrapper id="resume" className="section-fade-in" style={{ animationDelay: '1.2s' }}>
       <SectionTitle subtitle="Access my comprehensive resume for a detailed overview of my qualifications and experience.">
         My Resume / CV
       </SectionTitle>
@@ -24,6 +25,7 @@ export default function ResumeSection() {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button asChild size="lg" className="w-full sm:w-auto">
+            {/* Ensure the resume PDF exists in the public folder */}
             <a href="/resume-milan.pdf" download="Milan_Resume.pdf">
               <Download className="mr-2 h-5 w-5" /> Download PDF
             </a>

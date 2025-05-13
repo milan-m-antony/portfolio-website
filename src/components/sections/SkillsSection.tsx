@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -33,19 +34,18 @@ export default function SkillsSection() {
   };
 
   // Determine view mode
-  const isGlobalSearchActive = searchTerm !== '';
-  const isCategorySelectedView = selectedCategory !== null && !isGlobalSearchActive;
-  const isCategoriesOverviewView = !selectedCategory && !isGlobalSearchActive;
+  const isGlobalSearchActive = searchTerm !== '' && selectedCategory === null; // Global search only when no category is selected
+  const isCategorySearchActive = searchTerm !== '' && selectedCategory !== null; // Category-specific search
+  const isCategorySelectedView = selectedCategory !== null && searchTerm === ''; // Category selected, no search term
+  const isCategoriesOverviewView = !selectedCategory && searchTerm === ''; // Initial view: categories overview
 
   const categoriesToDisplay = useMemo(() => {
     if (!isCategoriesOverviewView) return [];
-    // In this mode, searchTerm is empty, so no filtering of categories by search term is needed.
-    // If skillsData itself is empty, this will be an empty array.
     return skillsData;
   }, [isCategoriesOverviewView]);
 
   const skillsToDisplay = useMemo(() => {
-    if (isCategoriesOverviewView) return []; // Not displaying skills if in category overview
+    if (isCategoriesOverviewView) return []; 
 
     const lowerSearchTerm = searchTerm.toLowerCase();
 
@@ -54,9 +54,9 @@ export default function SkillsSection() {
       const allMatchingSkills: Skill[] = [];
       skillsData.forEach(category => {
         category.skills.forEach(skill => {
-          if (skill.name.toLowerCase().includes(lowerSearchTerm)) {
-            // Ensure unique skills if a skill name could appear in multiple raw data categories (though not current structure)
-            if (!allMatchingSkills.some(s => s.name === skill.name)) {
+          if (skill.name.toLowerCase().includes(lowerSearchTerm) || category.name.toLowerCase().includes(lowerSearchTerm)) {
+            // Add skill if skill name or its category name matches
+            if (!allMatchingSkills.some(s => s.name === skill.name)) { // Avoid duplicates if searching by category term
               allMatchingSkills.push(skill);
             }
           }
@@ -65,40 +65,49 @@ export default function SkillsSection() {
       return allMatchingSkills;
     }
     
-    // If here, isCategorySelectedView must be true (category selected, no global search)
-    if (selectedCategory) { 
+    if (isCategorySelectedView && selectedCategory) { 
       return selectedCategory.skills;
     }
 
-    return []; // Fallback, should not be reached if logic is correct
-  }, [isCategoriesOverviewView, isGlobalSearchActive, searchTerm, selectedCategory, skillsData]);
+    if (isCategorySearchActive && selectedCategory) {
+      // Category-specific search: filter skills only within the selected category
+      return selectedCategory.skills.filter(skill => 
+        skill.name.toLowerCase().includes(lowerSearchTerm)
+      );
+    }
+
+    return []; // Fallback
+  }, [isCategoriesOverviewView, isGlobalSearchActive, isCategorySelectedView, isCategorySearchActive, searchTerm, selectedCategory]);
 
   // Section Title and Subtitle
   let currentTitle = "My Skills & Technologies";
   let currentSubtitle = "A diverse range of technical and soft skills I've honed through experience and continuous learning.";
-
+  
   if (isGlobalSearchActive) {
     currentTitle = `Search Results for "${searchTerm}"`;
-    currentSubtitle = `Found ${skillsToDisplay.length} skill(s).`;
-  } else if (isCategorySelectedView && selectedCategory) {
+    currentSubtitle = `Found ${skillsToDisplay.length} skill(s) across all categories.`;
+  } else if (selectedCategory) { // Covers both isCategorySelectedView and isCategorySearchActive
     currentTitle = selectedCategory.name;
-    currentSubtitle = `Exploring skills in ${selectedCategory.name}`;
+    currentSubtitle = `Exploring skills in ${selectedCategory.name}${isCategorySearchActive ? ` (filtered by "${searchTerm}")` : ''}.`;
+    if (isCategorySearchActive) {
+      currentSubtitle = `Found ${skillsToDisplay.length} skill(s) in ${selectedCategory.name} matching "${searchTerm}".`;
+    }
   }
-  // isCategoriesOverviewView uses the default title/subtitle.
+
 
   // Search Input Placeholder
   const searchInputPlaceholder = selectedCategory 
-    ? "Search all skills..." 
+    ? `Search skills in ${selectedCategory.name}...` 
     : "Search skills or categories...";
 
   return (
-    <SectionWrapper id="skills" className="section-fade-in" style={{ animationDelay: '0.4s' }}>
+    <SectionWrapper id="skills" className="section-fade-in" style={{ animationDelay: '0.6s' }}>
       <SectionTitle subtitle={currentSubtitle}>
         {currentTitle}
       </SectionTitle>
 
       <div className="mb-8 max-w-lg mx-auto flex gap-2 items-center">
-        {selectedCategory && ( // Show back button if a category context was established (even if now globally searching)
+        {selectedCategory && ( 
           <Button variant="outline" size="icon" onClick={handleBackToCategories} aria-label="Back to categories" className="mr-2">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -144,7 +153,7 @@ export default function SkillsSection() {
         </div>
       ) : (
         // Skills View (Global Search OR Specific Category)
-        <div key={`skills-${selectedCategory?.name || 'global_search'}-${animationKey}`}>
+        <div key={`skills-${selectedCategory?.name || 'search_results'}-${animationKey}`}>
             {skillsToDisplay.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {skillsToDisplay.map((skill, index) => (
@@ -156,8 +165,9 @@ export default function SkillsSection() {
           ) : (
             <p className="text-center text-muted-foreground">
               {isGlobalSearchActive 
-                ? `No skills found matching "${searchTerm}".` 
-                : (selectedCategory ? `No skills in ${selectedCategory.name}.` : 'No skills to display.')}
+                ? `No skills found matching "${searchTerm}". Try a broader search.` 
+                : (isCategorySearchActive && selectedCategory ? `No skills in ${selectedCategory.name} matching "${searchTerm}".` 
+                : (selectedCategory ? `No skills listed in ${selectedCategory.name}.` : 'No skills to display.'))}
             </p>
           )}
         </div>

@@ -1,3 +1,4 @@
+
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import CertificationCard from '@/components/ui/CertificationCard';
@@ -5,7 +6,7 @@ import { certificationsData } from '@/data/portfolioData';
 
 export default function CertificationsSection() {
   return (
-    <SectionWrapper id="certifications" className="bg-secondary section-fade-in" style={{ animationDelay: '0.8s' }}>
+    <SectionWrapper id="certifications" className="bg-secondary section-fade-in" style={{ animationDelay: '1.0s' }}>
       <SectionTitle subtitle="A collection of certifications and badges earned from reputable platforms, validating my expertise.">
         Certifications & Badges
       </SectionTitle>
