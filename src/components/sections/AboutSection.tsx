@@ -1,3 +1,4 @@
+
 "use client";
 
 import SectionWrapper from '@/components/ui/SectionWrapper';
@@ -43,20 +44,44 @@ const Typewriter = ({ text, speed = 100, onComplete, className }: { text: string
 
 export default function AboutSection() {
   const [typingStage, setTypingStage] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+
+  const handleScroll = () => {
+    if (typeof window !== 'undefined') {
+      setOffsetY(window.pageYOffset);
+    }
+  };
 
   useEffect(() => {
     // Start the first part of the animation chain after a short delay
     const startTimer = setTimeout(() => setTypingStage(1), 500); // Delay to sync with section fade-in
-    return () => clearTimeout(startTimer);
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      clearTimeout(startTimer);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, []);
+  
+  const parallaxStyle = (factor: number) => ({
+    transform: `translateY(${offsetY * factor}px)`,
+    transition: 'transform 0.1s ease-out' // Smooth transition for parallax
+  });
+
 
   return (
-    <SectionWrapper id="about" className="section-fade-in bg-background" style={{ animationDelay: '0.2s' }}>
-      <SectionTitle subtitle="A little more about who I am and what I do.">
-        About Me
-      </SectionTitle>
+    <SectionWrapper id="about" className="section-fade-in bg-background overflow-hidden" style={{ animationDelay: '0.2s' }}>
+      <div style={parallaxStyle(0.1)}>
+        <SectionTitle subtitle="A little more about who I am and what I do.">
+          About Me
+        </SectionTitle>
+      </div>
       <div className="grid md:grid-cols-2 gap-12 items-center">
-        <div className="space-y-6 animate-fadeIn" style={{animationDelay: '0.3s'}}>
+        <div className="space-y-6 animate-fadeIn" style={{animationDelay: '0.3s', ...parallaxStyle(0.15)}}>
           <h3 className="text-3xl font-semibold text-foreground leading-tight min-h-[2.5em]"> {/* min-h to prevent layout shift */}
             {typingStage === 0 && <span className="invisible">Milan: Weaving Code with Creativity</span>} {/* Placeholder for layout */}
             {typingStage >= 1 && <Typewriter text="Milan: Weaving " speed={70} onComplete={() => setTypingStage(s => Math.max(s, 2))} />}
@@ -86,7 +111,10 @@ export default function AboutSection() {
             </Button>
           </div>
         </div>
-        <div className="relative h-96 md:h-[450px] rounded-lg overflow-hidden shadow-xl group animate-fadeIn" style={{animationDelay: '0.4s'}}>
+        <div 
+          className="relative h-96 md:h-[450px] rounded-lg overflow-hidden shadow-xl group animate-fadeIn hidden md:block" 
+          style={{animationDelay: '0.4s', ...parallaxStyle(0.2)}}
+        >
           <Image
             src="https://picsum.photos/seed/aboutmilan/600/800"
             alt="Milan working on a project"
