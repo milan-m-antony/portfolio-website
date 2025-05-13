@@ -4,7 +4,7 @@
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, Briefcase, GraduationCap, ListChecks, Languages as LanguagesIcon, Building, Cloud, Laptop, Server as ServerIcon, Shield, Globe } from 'lucide-react'; // Added Cloud icon
+import { Download, Printer, Briefcase, GraduationCap, ListChecks, Languages as LanguagesIcon, Building, Cloud, Laptop, Server as ServerIcon, Shield, Globe } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +62,7 @@ const educationData = [
     institution: "SMEC, Kaloor, Kochi",
     date: "June – Dec 2024",
     description: "Focused on networking concepts and technologies.",
-    icon: GraduationCap, // Changed from BookOpen to GraduationCap for consistency
+    icon: GraduationCap,
   },
   {
     degree: "BCA (Bachelor of Computer Applications)",
@@ -83,7 +83,7 @@ const educationData = [
     institution: "St. Mary’s HS, Umikuppa",
     date: "2018 – 2019",
     description: "",
-    icon: GraduationCap, // Changed from BookOpen to GraduationCap for consistency with other education items
+    icon: GraduationCap,
   },
 ];
 
@@ -100,12 +100,12 @@ const keySkillsData = [
   },
   {
     category: "Windows Server/Tools",
-    icon: ServerIcon, // Consider a more specific icon if available, e.g., ServerCog
+    icon: ServerIcon, 
     skills: ["ADDS", "IIS", "DHCP", "FTP", "RRAS", "NAT", "Hyper-V", "Server Backup", "Troubleshooting"],
   },
   {
     category: "Windows Client OS",
-    icon: Shield, // Consider a Laptop or Desktop icon if more appropriate
+    icon: Shield, 
     skills: ["Installation & Configuration", "KMSPico Activation", "BitLocker", "Defender Security"],
   }
 ];
@@ -203,12 +203,12 @@ export default function ResumeSection() {
             </CardHeader>
             <CardContent>
               {keySkillsData.map((skillCategory, index) => (
-                <div key={index} className="mb-6">
+                <div key={index} className="mb-8"> {/* Increased bottom margin */}
                   <div className="flex items-center mb-3">
-                    {skillCategory.icon && <skillCategory.icon className="h-6 w-6 mr-3 text-primary" />}
-                    <h4 className="text-xl font-semibold text-foreground">{skillCategory.category}</h4>
+                    {skillCategory.icon && <skillCategory.icon className="h-5 w-5 mr-2 text-primary" />} {/* Adjusted icon size and margin */}
+                    <h4 className="text-lg font-semibold text-foreground">{skillCategory.category}</h4> {/* Adjusted title size */}
                   </div>
-                  <div className="ml-9 flex flex-wrap gap-2">
+                  <div className="pl-7 flex flex-wrap gap-3"> {/* Aligned badges with title and increased gap */}
                     {skillCategory.skills.map((skill, skillIndex) => (
                       <Badge key={skillIndex} variant="secondary">{skill}</Badge>
                     ))}
