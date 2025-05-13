@@ -70,33 +70,33 @@ export default function ContactSection() {
       <SectionTitle subtitle="Have a project in mind, a question, or just want to say hi? Feel free to reach out. I'm always open to discussing new opportunities.">
         Get In Touch
       </SectionTitle>
-      <Card className="max-w-2xl mx-auto shadow-xl"> {/* Adjusted max-width for single column */}
-        <CardContent className="p-6 md:p-8"> {/* Unified padding for the entire card content */}
+      <Card className="max-w-5xl mx-auto shadow-xl"> {/* Increased max-width for better two-column layout */}
+        <CardContent className="p-6 md:p-8 grid md:grid-cols-2 gap-8 md:gap-12 items-start"> {/* Grid layout for two columns */}
           
-          {/* Top Part: Contact Info & Social Links */}
-          <div className="mb-12"> {/* Increased bottom margin for separation */}
+          {/* Left Column: Contact Info & Social Links */}
+          <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-semibold text-foreground mb-6 text-center">Contact Information</h3>
+              <h3 className="text-2xl font-semibold text-foreground mb-6">Contact Information</h3>
               {contactDetails.map((item, index) => (
                 <div key={index} className="flex items-start gap-4 mb-4 last:mb-0">
                   <item.icon className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-foreground">{item.label}</p>
                     {item.isLink ? (
-                      <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      <Link href={item.href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors break-all">
                         {item.value}
                       </Link>
                     ) : (
-                      <p className="text-muted-foreground">{item.value}</p>
+                      <p className="text-muted-foreground break-all">{item.value}</p>
                     )}
                   </div>
                 </div>
               ))}
             </div>
             
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-foreground mb-6 text-center">Connect With Me</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"> {/* Grid for social links, adjusted gap */}
+            <div className="mt-8"> {/* Ensure some space if the above content is short */}
+              <h3 className="text-xl font-semibold text-foreground mb-6">Connect With Me</h3>
+              <div className="space-y-4"> {/* Use space-y for vertical stacking of social links */}
                 {socialLinks.map((social, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <social.icon className="h-5 w-5 text-primary flex-shrink-0" />
@@ -109,9 +109,9 @@ export default function ContactSection() {
             </div>
           </div>
 
-          {/* Bottom Part: Contact Form */}
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground mb-6 text-center">Send Me a Message</h3>
+          {/* Right Column: Contact Form */}
+          <div className="space-y-6">
+            <h3 className="text-2xl font-semibold text-foreground mb-6 text-center md:text-left">Send Me a Message</h3>
             <ContactForm />
           </div>
 
