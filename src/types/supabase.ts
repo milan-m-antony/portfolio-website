@@ -1,3 +1,4 @@
+
 // Based on your Supabase table structure
 // This file helps provide TypeScript types for your Supabase data.
 // You can generate these types automatically using the Supabase CLI:
@@ -119,7 +120,72 @@ export interface Database {
           }
         ]
       }
-      // Define other tables (timeline_events, certifications, about_content) similarly
+      certifications: { 
+        Row: {
+          id: string
+          title: string
+          issuer: string
+          date: string // Consider DATE type if appropriate
+          image_url: string | null
+          image_hint: string | null
+          verify_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          issuer: string
+          date: string
+          image_url?: string | null
+          image_hint?: string | null
+          verify_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          issuer?: string
+          date?: string
+          image_url?: string | null
+          image_hint?: string | null
+          verify_url?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      timeline_events: { // Added timeline_events table
+        Row: {
+          id: string
+          date: string
+          title: string
+          description: string
+          icon_name: string 
+          type: string // 'work' | 'education' | 'certification' | 'milestone'
+          sort_order: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          date: string
+          title: string
+          description: string
+          icon_name: string
+          type: string
+          sort_order?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          date?: string
+          title?: string
+          description?: string
+          icon_name?: string
+          type?: string
+          sort_order?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -136,21 +202,18 @@ export interface Database {
   }
 }
 
-// Re-defining local types to match Supabase structure and avoid breaking existing components immediately.
-// Ideally, components would use types directly from Database['public']['Tables']['projects']['Row'] etc.
-
 export type ProjectStatus = 'Deployed' | 'In Progress' | 'Prototype' | 'Archived' | 'Concept' | 'Completed';
 
 export interface Project {
   id: string;
   title: string;
   description: string | null;
-  imageUrl: string | null; // Renamed from image_url for consistency with components
+  imageUrl: string | null; 
   imageHint: string | null;
   liveDemoUrl?: string | null;
   repoUrl?: string | null;
   tags: string[] | null;
-  status: ProjectStatus | null; // More specific type
+  status: ProjectStatus | null; 
   progress?: number | null;
   created_at: string;
 }
@@ -158,28 +221,30 @@ export interface Project {
 export interface Skill {
   id: string;
   name: string;
-  iconName: string | null; // Storing name of the icon
+  iconName: string | null; 
   description: string | null;
-  categoryId?: string | null; // category_id
-  // category?: SkillCategory; // If you join them
+  categoryId?: string | null; 
 }
 
 export interface SkillCategory {
   id: string;
   name: string;
-  iconName: string | null; // Storing name of the icon
+  iconName: string | null; 
   iconColor?: string | null;
-  skills?: Skill[]; // If you fetch them together
-  skillCount?: number; // Calculated or fetched
+  skills?: Skill[]; 
+  skillCount?: number; 
 }
+
+export type TimelineEventType = 'work' | 'education' | 'certification' | 'milestone';
 
 export interface TimelineEvent {
   id: string;
   date: string;
   title: string;
   description: string;
-  iconName: string; // Storing name of the icon
-  type: 'work' | 'education' | 'certification' | 'milestone';
+  iconName: string; // Maps to Lucide icon names
+  type: TimelineEventType;
+  sort_order?: number | null;
 }
 
 export interface Certification {
@@ -187,7 +252,8 @@ export interface Certification {
   title: string;
   issuer: string;
   date: string;
-  imageUrl: string | null;
-  imageHint: string | null;
-  verifyUrl?: string | null;
+  imageUrl: string | null; 
+  imageHint: string | null; 
+  verifyUrl?: string | null; 
+  created_at: string;
 }
