@@ -11,3 +11,6 @@ supabase
 
 # skill icon
 lucide
+
+# additional
+netlify.toml
