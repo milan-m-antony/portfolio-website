@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
@@ -11,10 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home } from 'lucide-react';
+import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home, UploadCloud, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { Project, ProjectStatus } from '@/types/supabase';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ const projectSchema = z.object({
   id: z.string().uuid().optional(),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  image_url: z.string().url("Must be a valid URL if provided, or will be set by upload.").optional().or(z.literal("")),
   live_demo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   repo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)),
@@ -55,8 +56,8 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl' | 'imageHint'> & {
-    tags: string;
+type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl'> & {
+    tags: string; // For form input, tags are comma-separated string
     imageUrl?: string | null;
     liveDemoUrl?: string | null;
     repoUrl?: string | null;
@@ -81,8 +82,11 @@ export default function AdminDashboardPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm<ProjectFormData>({
+
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors: formErrors } } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
         title: '',
@@ -96,6 +100,8 @@ export default function AdminDashboardPage() {
       }
   });
 
+  const currentImageUrlForPreview = watch('image_url');
+
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
@@ -108,16 +114,33 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(imageFile);
+    } else if (currentProject?.imageUrl) {
+      setImagePreview(currentProject.imageUrl);
+    } else {
+      setImagePreview(null);
+    }
+  }, [imageFile, currentProject]);
+
+
+  useEffect(() => {
     if (currentProject) {
       setValue('id', currentProject.id);
       setValue('title', currentProject.title);
       setValue('description', currentProject.description || '');
-      setValue('image_url', currentProject.imageUrl || '');
+      setValue('image_url', currentProject.imageUrl || ''); // Existing URL for display
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
-      setValue('tags', currentProject.tags);
+      setValue('tags', currentProject.tags); // currentProject.tags is already a string here
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress === null || currentProject.progress === undefined ? null : Number(currentProject.progress));
+      setImageFile(null); // Clear any previously selected file when opening modal for a different project
+      setImagePreview(currentProject.imageUrl || null); // Set initial preview for existing image
     } else {
       reset({
         title: '',
@@ -129,6 +152,8 @@ export default function AdminDashboardPage() {
         status: 'Concept',
         progress: null,
       });
+      setImageFile(null);
+      setImagePreview(null);
     }
   }, [currentProject, setValue, reset]);
 
@@ -145,15 +170,14 @@ export default function AdminDashboardPage() {
       toast({ title: "Error", description: `Could not fetch projects: ${fetchError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       setProjects([]);
     } else if (data) {
-      const mappedProjects: Project[] = data.map(p => ({
+       const mappedProjects: Project[] = data.map(p => ({
         id: p.id,
         title: p.title,
         description: p.description,
-        imageUrl: p.image_url, // Map snake_case to camelCase
-        // imageHint: p.image_hint, // Removed imageHint
-        liveDemoUrl: p.live_demo_url, // Map snake_case to camelCase
-        repoUrl: p.repo_url, // Map snake_case to camelCase
-        tags: p.tags,
+        imageUrl: p.image_url,
+        liveDemoUrl: p.live_demo_url,
+        repoUrl: p.repo_url,
+        tags: p.tags, // Supabase returns tags as string[]
         status: p.status as ProjectStatus,
         progress: p.progress,
         created_at: p.created_at,
@@ -198,20 +222,68 @@ export default function AdminDashboardPage() {
     setProjects([]);
   };
 
+  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setImageFile(file);
+      setValue('image_url', ''); // Clear text input if new file is chosen
+    } else {
+      setImageFile(null);
+      // If they clear the file input, and there was a currentProject.imageUrl, restore it to preview
+      if (currentProject?.imageUrl) setImagePreview(currentProject.imageUrl);
+      else setImagePreview(null);
+    }
+  };
+
+
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
+    let imageUrlToSave = formData.image_url; // Start with the URL from the text input
+
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`; // Define storage path
+
+      toast({ title: "Uploading Image", description: "Please wait...", variant: "default" });
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('project-images') // Ensure this is your bucket name
+        .upload(filePath, imageFile, {
+          cacheControl: '3600',
+          upsert: false, // Set to true if you want to overwrite files with the same name
+        });
+
+      if (uploadError) {
+        console.error("Error uploading image:", JSON.stringify(uploadError, null, 2));
+        toast({ title: "Upload Error", description: `Failed to upload image: ${uploadError.message}`, variant: "destructive" });
+        return; // Stop submission if upload fails
+      }
+
+      // Get public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from('project-images') // Bucket name
+        .getPublicUrl(filePath); // Use the path returned by the upload
+
+      if (!publicUrlData?.publicUrl) {
+        toast({ title: "Error", description: "Failed to get public URL for uploaded image.", variant: "destructive" });
+        return;
+      }
+      imageUrlToSave = publicUrlData.publicUrl;
+    }
+
     const projectDataToSave = {
       title: formData.title,
       description: formData.description,
-      image_url: formData.image_url || null,
-      // image_hint removed
+      image_url: imageUrlToSave || null,
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
-      tags: formData.tags,
+      tags: formData.tags, // Already an array due to schema transform
       status: formData.status,
       progress: formData.status === 'In Progress' && formData.progress !== undefined && formData.progress !== null ? Number(formData.progress) : null,
     };
 
     if (currentProject?.id) {
+      // TODO: Handle deletion of old image from Supabase Storage if a new one is uploaded
       const { error: updateError } = await supabase
         .from('projects')
         .update(projectDataToSave)
@@ -235,6 +307,10 @@ export default function AdminDashboardPage() {
     }
     setIsProjectModalOpen(false);
     setCurrentProject(null);
+    setImageFile(null);
+    setImagePreview(null);
+    const fileInput = document.getElementById('project_image_file') as HTMLInputElement;
+    if (fileInput) fileInput.value = ''; // Reset file input
     fetchProjects();
     router.refresh();
   };
@@ -255,7 +331,7 @@ export default function AdminDashboardPage() {
         return;
     }
     console.log("[AdminDashboard] User confirmed delete. Proceeding with Supabase call...");
-
+    // TODO: Delete image from Supabase Storage if project.imageUrl exists
     const { error: deleteError } = await supabase
       .from('projects')
       .delete()
@@ -267,8 +343,8 @@ export default function AdminDashboardPage() {
     } else {
       console.log("[AdminDashboard] Project deleted successfully from Supabase.");
       toast({ title: "Success", description: "Project deleted successfully." });
-      fetchProjects();
-      router.refresh();
+      fetchProjects(); // Refresh projects list
+      router.refresh(); // Revalidate Next.js cache
     }
     setShowDeleteConfirm(false);
     setProjectToDelete(null);
@@ -279,7 +355,6 @@ export default function AdminDashboardPage() {
     setCurrentProject(project ? {
         ...project,
         tags: (Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')),
-        // imageHint removed
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -317,12 +392,12 @@ export default function AdminDashboardPage() {
                 </Alert>
               )}
               <div className="space-y-2">
-                <Label htmlFor="username">Email Address</Label>
-                <Input id="username" type="email" value={username} onChange={(e) => setUsername(e.target.value.trim())} placeholder="milanmantony2002@gmail.com" required className="bg-background/70 focus:bg-background" />
+                <Label htmlFor="username-login">Email Address</Label>
+                <Input id="username-login" type="email" value={username} onChange={(e) => setUsername(e.target.value.trim())} placeholder="milanmantony2002@gmail.com" required className="bg-background/70 focus:bg-background" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value.trim())} placeholder="••••••••" required className="bg-background/70 focus:bg-background" />
+                <Label htmlFor="password-login">Password</Label>
+                <Input id="password-login" type="password" value={password} onChange={(e) => setPassword(e.target.value.trim())} placeholder="••••••••" required className="bg-background/70 focus:bg-background" />
               </div>
               <Button type="submit" className="w-full text-lg py-3">
                 <LogIn className="mr-2 h-5 w-5" /> Sign In
@@ -361,7 +436,11 @@ export default function AdminDashboardPage() {
             Manage Projects
             <Dialog open={isProjectModalOpen} onOpenChange={(isOpen) => {
                 setIsProjectModalOpen(isOpen);
-                if (!isOpen) setCurrentProject(null);
+                if (!isOpen) {
+                    setCurrentProject(null);
+                    setImageFile(null);
+                    setImagePreview(null);
+                }
              }}>
               <DialogTrigger asChild>
                 <Button onClick={() => handleOpenProjectModal()}>
@@ -372,7 +451,7 @@ export default function AdminDashboardPage() {
                 <DialogHeader>
                   <DialogTitle>{currentProject?.id ? 'Edit Project' : 'Add New Project'}</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit(onProjectSubmit)} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto p-2 scrollbar-hide">
+                <form onSubmit={handleSubmit(onProjectSubmit)} className="grid gap-4 py-4 max-h-[80vh] overflow-y-auto p-2 scrollbar-hide">
                   <div>
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" {...register("title")} />
@@ -383,12 +462,38 @@ export default function AdminDashboardPage() {
                     <Textarea id="description" {...register("description")} />
                     {formErrors.description && <p className="text-destructive text-sm mt-1">{formErrors.description.message}</p>}
                   </div>
-                  <div>
-                    <Label htmlFor="image_url">Image URL</Label>
-                    <Input id="image_url" {...register("image_url")} placeholder="https://example.com/image.png" />
-                     {formErrors.image_url && <p className="text-destructive text-sm mt-1">{formErrors.image_url.message}</p>}
+
+                  {/* Image Upload and URL field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="project_image_file">Project Image File</Label>
+                    <div className="flex items-center gap-3">
+                        <Input
+                            id="project_image_file"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileChange}
+                            className="flex-grow"
+                        />
+                        <UploadCloud className="h-6 w-6 text-muted-foreground"/>
+                    </div>
+                    {(imagePreview || currentImageUrlForPreview) && (
+                        <div className="mt-2 p-2 border rounded-md bg-muted aspect-video relative w-full max-w-xs mx-auto">
+                            <Image
+                            src={imagePreview || currentImageUrlForPreview || "https://placehold.co/600x400.png"}
+                            alt="Image preview"
+                            layout="fill"
+                            objectFit="contain"
+                            className="rounded"
+                            />
+                        </div>
+                    )}
+                     <div>
+                        <Label htmlFor="image_url" className="text-xs text-muted-foreground">Or enter Image URL (upload will override)</Label>
+                        <Input id="image_url" {...register("image_url")} placeholder="https://example.com/image.png" />
+                        {formErrors.image_url && <p className="text-destructive text-sm mt-1">{formErrors.image_url.message}</p>}
+                    </div>
                   </div>
-                  {/* Image Hint field removed */}
+
                   <div>
                     <Label htmlFor="live_demo_url">Live Demo URL</Label>
                     <Input id="live_demo_url" {...register("live_demo_url")} placeholder="https://example.com/demo" />
@@ -422,7 +527,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <DialogFooter>
                     <DialogClose asChild>
-                      <Button type="button" variant="outline">Cancel</Button>
+                      <Button type="button" variant="outline" onClick={() => { setImageFile(null); setImagePreview(null);}}>Cancel</Button>
                     </DialogClose>
                     <Button type="submit">{currentProject?.id ? 'Save Changes' : 'Add Project'}</Button>
                   </DialogFooter>
@@ -439,6 +544,11 @@ export default function AdminDashboardPage() {
                 <div className="space-y-4">
                 {projects.map((project) => (
                     <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
+                     {project.imageUrl && (
+                        <div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border">
+                            <Image src={project.imageUrl} alt={project.title} layout="fill" objectFit="cover" />
+                        </div>
+                     )}
                     <div className="flex-grow mb-3 sm:mb-0">
                         <h4 className="font-semibold text-lg">{project.title}</h4>
                         <p className="text-sm text-muted-foreground">
@@ -453,7 +563,7 @@ export default function AdminDashboardPage() {
                         <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}>
                         <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
+                         <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
                             <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
                         </Button>
                     </div>
@@ -520,3 +630,4 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
+
