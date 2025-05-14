@@ -1,27 +1,48 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Package as DefaultCategoryIcon } from 'lucide-react'; // Import default icon
+import { ArrowRight, Package as ExplicitDefaultCategoryIcon, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import * as LucideIcons from 'lucide-react'; // Import all icons
+import * as LucideIcons from 'lucide-react';
 
 interface CategoryCardProps {
   name: string;
-  iconName: string | null;
+  iconName: string | null; // iconColor was removed
   skillCount: number;
   onClick: () => void;
 }
 
 export default function CategoryCard({ name, iconName, skillCount, onClick }: CategoryCardProps) {
-  let IconComponent: LucideIcon = DefaultCategoryIcon; // Use imported default
+  let IconToRender: LucideIcon = ExplicitDefaultCategoryIcon;
 
-  if (iconName) {
+  if (!ExplicitDefaultCategoryIcon) {
+    console.error("CategoryCard Error: ExplicitDefaultCategoryIcon (Package) is undefined! Falling back to HelpCircle.");
+    IconToRender = HelpCircle;
+  }
+
+  if (iconName && typeof iconName === 'string' && iconName.trim() !== '') {
     const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon | undefined;
     if (FoundIcon && typeof FoundIcon === 'function') {
-      IconComponent = FoundIcon;
+      IconToRender = FoundIcon;
     } else {
-      console.warn(`CategoryCard: Lucide icon "${iconName}" not found or is not a valid component. Falling back to default.`);
+      console.warn(
+        `CategoryCard: Lucide icon "${iconName}" for category "${name}" not found or invalid. ` +
+        `Falling back to default icon (${IconToRender === ExplicitDefaultCategoryIcon ? 'Package' : 'HelpCircle'}).`
+      );
     }
+  } else if (iconName !== null && iconName !== undefined && iconName !== '') {
+     console.warn(
+        `CategoryCard: Invalid iconName value for category "${name}": ${JSON.stringify(iconName)}. ` +
+        `Falling back to default icon (${IconToRender === ExplicitDefaultCategoryIcon ? 'Package' : 'HelpCircle'}).`
+    );
+  }
+
+  if (typeof IconToRender !== 'function') {
+    console.error(
+      `CategoryCard Critical Error: IconToRender is still not a function for category "${name}" (iconName: "${iconName}"). ` +
+      `Rendering HelpCircle as ultimate fallback.`
+    );
+    IconToRender = HelpCircle;
   }
 
   return (
@@ -34,7 +55,7 @@ export default function CategoryCard({ name, iconName, skillCount, onClick }: Ca
       aria-label={`View skills in ${name} category`}
     >
       <CardHeader className="pb-2">
-        <IconComponent className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", "text-primary")} />
+        <IconToRender className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", "text-primary")} />
         <CardTitle className="text-xl font-semibold text-foreground">{name}</CardTitle>
       </CardHeader>
       <CardContent>

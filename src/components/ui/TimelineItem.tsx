@@ -2,15 +2,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// Ensure TimelineEvent type used here matches what TimelineSection provides.
-// For now, we'll assume event.iconName is a string and try to map it.
-import type { TimelineEvent as PortfolioTimelineEvent } from '@/data/portfolioData'; // This has strict iconName
-import type { TimelineEvent as SupabaseTimelineEvent } from '@/types/supabase'; // This has iconName as string
+import type { TimelineEvent as SupabaseTimelineEvent } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
-import { Lightbulb, Briefcase, Award, GraduationCap, Laptop, Star, type LucideIcon, HelpCircle } from 'lucide-react'; // Added HelpCircle for fallback
+import { Lightbulb, Briefcase, Award, GraduationCap, Laptop, Star, type LucideIcon, HelpCircle } from 'lucide-react';
 
-// This map uses specific string keys expected from the database or mapping logic
 const iconMap: Record<string, LucideIcon> = {
   Lightbulb,
   Briefcase,
@@ -18,31 +14,41 @@ const iconMap: Record<string, LucideIcon> = {
   GraduationCap,
   Laptop,
   Star,
-  // Add other explicit icon names you use in your DB here if they differ from Lucide export names
+  HelpCircle, // Add HelpCircle to map as a known fallback
 };
 
 interface TimelineItemProps {
-  event: SupabaseTimelineEvent; // Changed to use SupabaseTimelineEvent which has iconName: string
+  event: SupabaseTimelineEvent;
   isLeft: boolean;
 }
 
 export default function TimelineItem({ event, isLeft }: TimelineItemProps) {
-  // Resolve the icon component safely
-  let ResolvedIconComponent: LucideIcon = iconMap[event.iconName] || HelpCircle; // Default to HelpCircle if not found
-  if (typeof ResolvedIconComponent !== 'function') { // Double check if lookup failed badly
+  let ResolvedIconComponent: LucideIcon | undefined = iconMap[event.iconName];
+
+  if (!ResolvedIconComponent || typeof ResolvedIconComponent !== 'function') {
+    console.warn(
+      `TimelineItem: Icon name "${event.iconName}" for event "${event.title}" not found in iconMap or is invalid. Falling back to HelpCircle.`
+    );
     ResolvedIconComponent = HelpCircle;
   }
-
+  
+  // Ultimate fallback check
+  if (typeof ResolvedIconComponent !== 'function') {
+     console.error(
+      `TimelineItem Critical Error: ResolvedIconComponent is still not a function for event "${event.title}" (iconName: "${event.iconName}"). ` +
+      `Rendering HelpCircle as ultimate fallback.`
+    );
+    ResolvedIconComponent = HelpCircle; // Ensure it's always a function
+  }
 
   const colors = {
     work: 'bg-blue-500',
     education: 'bg-green-500',
     certification: 'bg-yellow-500',
     milestone: 'bg-purple-500',
-    default: 'bg-gray-500', // Default color if type is unexpected
+    default: 'bg-gray-500',
   };
   const typeColor = colors[event.type as keyof typeof colors] || colors.default;
-
 
   const [isVisible, setIsVisible] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
@@ -52,11 +58,11 @@ export default function TimelineItem({ event, isLeft }: TimelineItemProps) {
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(entry.target); // Stop observing once visible
+          observer.unobserve(entry.target);
         }
       },
       {
-        threshold: 0.1, // Trigger when 10% of the item is visible
+        threshold: 0.1,
       }
     );
 
