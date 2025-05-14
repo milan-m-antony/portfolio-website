@@ -1,48 +1,58 @@
 
-import type { LucideIcon } from 'lucide-react';
+// src/components/ui/CategoryCard.tsx
+import * as LucideIcons from 'lucide-react'; // Keep for dynamic primary icon
+import { ArrowRight, type LucideProps } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Package as ExplicitDefaultCategoryIcon, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import * as LucideIcons from 'lucide-react';
+import React from 'react'; // Explicitly import React
 
 interface CategoryCardProps {
   name: string;
-  iconName: string | null; // iconColor was removed
+  iconName: string | null;
   skillCount: number;
   onClick: () => void;
 }
 
-export default function CategoryCard({ name, iconName, skillCount, onClick }: CategoryCardProps) {
-  let IconToRender: LucideIcon = ExplicitDefaultCategoryIcon;
+// A very simple hardcoded SVG to use as an ultimate fallback for categories.
+const DefaultCategorySvgFallback = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    {/* Simple representation of a package or category icon */}
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+  </svg>
+);
 
-  if (!ExplicitDefaultCategoryIcon) {
-    console.error("CategoryCard Error: ExplicitDefaultCategoryIcon (Package) is undefined! Falling back to HelpCircle.");
-    IconToRender = HelpCircle;
-  }
+
+export default function CategoryCard({ name, iconName, skillCount, onClick }: CategoryCardProps) {
+  let IconToRender: React.ElementType = DefaultCategorySvgFallback; // Default to hardcoded SVG
 
   if (iconName && typeof iconName === 'string' && iconName.trim() !== '') {
-    const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon | undefined;
+    const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons];
     if (FoundIcon && typeof FoundIcon === 'function') {
       IconToRender = FoundIcon;
     } else {
       console.warn(
-        `CategoryCard: Lucide icon "${iconName}" for category "${name}" not found or invalid. ` +
-        `Falling back to default icon (${IconToRender === ExplicitDefaultCategoryIcon ? 'Package' : 'HelpCircle'}).`
+        `CategoryCard: Lucide icon named "${iconName}" for category "${name}" not found or is not a function. Using hardcoded SVG fallback.`
       );
+      // IconToRender remains DefaultCategorySvgFallback
     }
-  } else if (iconName !== null && iconName !== undefined && iconName !== '') {
+  } else {
      console.warn(
-        `CategoryCard: Invalid iconName value for category "${name}": ${JSON.stringify(iconName)}. ` +
-        `Falling back to default icon (${IconToRender === ExplicitDefaultCategoryIcon ? 'Package' : 'HelpCircle'}).`
-    );
-  }
-
-  if (typeof IconToRender !== 'function') {
-    console.error(
-      `CategoryCard Critical Error: IconToRender is still not a function for category "${name}" (iconName: "${iconName}"). ` +
-      `Rendering HelpCircle as ultimate fallback.`
-    );
-    IconToRender = HelpCircle;
+        `CategoryCard: No iconName provided for category "${name}". Using hardcoded SVG fallback.`
+      );
+     // IconToRender remains DefaultCategorySvgFallback
   }
 
   return (
