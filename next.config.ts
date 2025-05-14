@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**', // Standard path for Supabase public storage
       },
+      { // Added for the error encountered
+        protocol: 'https',
+        hostname: 'fonts.google.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
