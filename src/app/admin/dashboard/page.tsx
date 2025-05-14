@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  // AlertDialogTrigger, // No longer needed here if button manually sets state
 } from "@/components/ui/alert-dialog";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,9 +57,13 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at'> & {
-    tags: string; 
-    created_at?: string; 
+type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl' | 'imageHint'> & {
+    tags: string;
+    imageUrl?: string | null;
+    liveDemoUrl?: string | null;
+    repoUrl?: string | null;
+    imageHint?: string | null;
+    created_at?: string;
 };
 
 
@@ -90,7 +94,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', 
+        tags: '',
         status: 'Concept',
         progress: null,
       }
@@ -116,7 +120,7 @@ export default function AdminDashboardPage() {
       setValue('image_hint', currentProject.imageHint || '');
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
-      setValue('tags', currentProject.tags); 
+      setValue('tags', currentProject.tags);
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress === null || currentProject.progress === undefined ? null : Number(currentProject.progress));
     } else {
@@ -127,7 +131,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', 
+        tags: '',
         status: 'Concept',
         progress: null,
       });
@@ -155,7 +159,7 @@ export default function AdminDashboardPage() {
         imageHint: p.image_hint,
         liveDemoUrl: p.live_demo_url,
         repoUrl: p.repo_url,
-        tags: p.tags, 
+        tags: p.tags,
         status: p.status as ProjectStatus,
         progress: p.progress,
         created_at: p.created_at,
@@ -208,7 +212,7 @@ export default function AdminDashboardPage() {
       image_hint: formData.image_hint || null,
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
-      tags: formData.tags, 
+      tags: formData.tags,
       status: formData.status,
       progress: formData.status === 'In Progress' && formData.progress !== undefined && formData.progress !== null ? Number(formData.progress) : null,
     };
@@ -227,7 +231,7 @@ export default function AdminDashboardPage() {
     } else {
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(projectDataToSave as any); 
+        .insert(projectDataToSave as any);
       if (insertError) {
         console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
         toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
@@ -238,37 +242,49 @@ export default function AdminDashboardPage() {
     setIsProjectModalOpen(false);
     setCurrentProject(null);
     fetchProjects();
-    router.refresh(); 
+    router.refresh();
   };
 
   const triggerDeleteConfirmation = (project: Project) => {
+    console.log("[AdminDashboard] triggerDeleteConfirmation called for project:", project.title);
     setProjectToDelete(project);
     setShowDeleteConfirm(true);
   };
 
   const performDeleteProject = async (projectId: string) => {
-    console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`); 
+    console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`);
+    // Log 3 from previous debugging
+    if (!projectToDelete || projectToDelete.id !== projectId) {
+        console.error("[AdminDashboard] Mismatch or missing projectToDelete state for ID:", projectId);
+        toast({ title: "Error", description: "Could not delete project due to an internal state error.", variant: "destructive"});
+        setShowDeleteConfirm(false);
+        setProjectToDelete(null);
+        return;
+    }
+    console.log("[AdminDashboard] User confirmed delete. Proceeding with Supabase call...");
+
     const { error: deleteError } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId);
 
     if (deleteError) {
-      console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); 
+      console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); // Log 4 from previous debugging
       toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
     } else {
-      console.log("[AdminDashboard] Project deleted successfully from Supabase."); 
+      console.log("[AdminDashboard] Project deleted successfully from Supabase.");
       toast({ title: "Success", description: "Project deleted successfully." });
-      fetchProjects();
+      fetchProjects(); // Re-fetch projects to update the list
       router.refresh();
     }
+    setShowDeleteConfirm(false); // Close modal after operation
     setProjectToDelete(null); // Clear the project to delete state
   };
 
 
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
-        ...project,
+        ...project, // Spread all original Project properties
         tags: (Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')),
     } : null);
     setIsProjectModalOpen(true);
@@ -446,11 +462,10 @@ export default function AdminDashboardPage() {
                         <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}>
                         <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
                         </Button>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
+                        {/* Removed AlertDialogTrigger wrapper, button onClick now directly triggers confirmation */}
+                        <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
                             <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
-                           </Button>
-                        </AlertDialogTrigger>
+                        </Button>
                     </div>
                     </Card>
                 ))}
@@ -471,15 +486,15 @@ export default function AdminDashboardPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
+            <AlertDialogCancel
               onClick={() => {
                 setShowDeleteConfirm(false);
                 setProjectToDelete(null);
               }}
               className={cn(
-                buttonVariants({ variant: "outline" }), 
+                buttonVariants({ variant: "outline" }),
                 "border-destructive-foreground/40 text-destructive-foreground",
-                "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60" 
+                "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60"
               )}
             >
               Cancel
@@ -489,11 +504,11 @@ export default function AdminDashboardPage() {
                 if (projectToDelete) {
                   performDeleteProject(projectToDelete.id);
                 }
-                setShowDeleteConfirm(false);
-                setProjectToDelete(null);
+                // setShowDeleteConfirm(false); // Already handled in performDeleteProject or its callback
+                // setProjectToDelete(null); // Already handled in performDeleteProject or its callback
               }}
               className={cn(
-                buttonVariants({ variant: "default" }), 
+                buttonVariants({ variant: "default" }),
                 "bg-destructive-foreground text-destructive",
                 "hover:bg-destructive-foreground/90"
               )}
@@ -517,5 +532,3 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
-        
-    
