@@ -14,7 +14,6 @@ async function getSkillsData(): Promise<SkillCategory[]> {
       id,
       name,
       icon_name,
-      -- icon_color, -- Removed as it's no longer in the table or SkillCategory type
       sort_order,
       skills (id, name, icon_name, description, category_id)
     `)
@@ -88,3 +87,4 @@ export default async function SkillsSection() {
     </SectionWrapper>
   );
 }
+
