@@ -19,18 +19,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'placehold.co', // Ensure this entry is present
+        hostname: 'placehold.co',
         port: '',
         pathname: '/**',
       },
-      // Add your Supabase storage hostname if you plan to store images there
-      // Example:
-      // {
-      //   protocol: 'https',
-      //   hostname: 'your-supabase-project-id.supabase.co',
-      //   port: '',
-      //   pathname: '/storage/v1/object/public/**',
-      // },
+      {
+        protocol: 'https',
+        hostname: 'yggjwqbwhapjngewnzvg.supabase.co', // Your Supabase project hostname
+        port: '',
+        pathname: '/storage/v1/object/public/**', // Standard path for Supabase public storage
+      },
     ],
   },
 };
