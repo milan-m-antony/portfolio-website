@@ -13,9 +13,9 @@ async function getSkillsData(): Promise<SkillCategory[]> {
     .select(`
       id,
       name,
-      icon_image_url, -- Changed from icon_name
+      icon_image_url, 
       sort_order,
-      skills (id, name, icon_image_url, description, category_id) -- Changed from icon_name for skills
+      skills (id, name, icon_image_url, description, category_id)
     `)
     .order('sort_order', { ascending: true })
     .order('created_at', { foreignTable: 'skills', ascending: true }); // Order skills within categories
@@ -84,3 +84,4 @@ export default async function SkillsSection() {
     </SectionWrapper>
   );
 }
+
