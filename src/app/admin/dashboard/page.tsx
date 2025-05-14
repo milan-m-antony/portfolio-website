@@ -124,9 +124,6 @@ export default function AdminDashboardPage() {
   const [showSkillDeleteConfirm, setShowSkillDeleteConfirm] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<SkillType | null>(null);
 
-  const [categoryIconPreview, setCategoryIconPreview] = useState<React.ElementType | null>(null);
-  const [skillIconPreview, setSkillIconPreview] = useState<React.ElementType | null>(null);
-
 
   const projectForm = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -211,35 +208,6 @@ export default function AdminDashboardPage() {
     }
   }, [currentSkill, parentCategoryIdForNewSkill, skillForm]);
 
-  const watchedCategoryIconNameFromForm = categoryForm.watch('icon_name');
-  const watchedSkillIconNameFromForm = skillForm.watch('icon_name');
-
-  useEffect(() => {
-    if (watchedCategoryIconNameFromForm && typeof watchedCategoryIconNameFromForm === 'string' && watchedCategoryIconNameFromForm.trim() !== '') {
-      const Icon = LucideIcons[watchedCategoryIconNameFromForm as keyof typeof LucideIcons] as React.ElementType | undefined;
-      if (Icon && typeof Icon === 'function') {
-        setCategoryIconPreview(() => Icon);
-      } else {
-        setCategoryIconPreview(null);
-      }
-    } else {
-      setCategoryIconPreview(null);
-    }
-  }, [watchedCategoryIconNameFromForm]);
-
-  useEffect(() => {
-    if (watchedSkillIconNameFromForm && typeof watchedSkillIconNameFromForm === 'string' && watchedSkillIconNameFromForm.trim() !== '') {
-      const Icon = LucideIcons[watchedSkillIconNameFromForm as keyof typeof LucideIcons] as React.ElementType | undefined;
-      if (Icon && typeof Icon === 'function') {
-        setSkillIconPreview(() => Icon);
-      } else {
-        setSkillIconPreview(null);
-      }
-    } else {
-      setSkillIconPreview(null);
-    }
-  }, [watchedSkillIconNameFromForm]);
-
 
   const fetchProjects = async () => {
     setIsLoadingProjects(true);
@@ -253,9 +221,9 @@ export default function AdminDashboardPage() {
         id: p.id,
         title: p.title,
         description: p.description,
-        imageUrl: p.image_url, // Map snake_case to camelCase
-        liveDemoUrl: p.live_demo_url, // Map snake_case to camelCase
-        repoUrl: p.repo_url, // Map snake_case to camelCase
+        imageUrl: p.image_url,
+        liveDemoUrl: p.live_demo_url,
+        repoUrl: p.repo_url,
         tags: p.tags,
         status: p.status as ProjectStatus,
         progress: p.progress,
@@ -270,9 +238,9 @@ export default function AdminDashboardPage() {
     setIsLoadingSkills(true);
     const { data, error: fetchError } = await supabase
       .from('skill_categories')
-      .select('*, skills (*)') // Fetch categories and their related skills
+      .select('*, skills (*)')
       .order('sort_order', { ascending: true })
-      .order('created_at', { foreignTable: 'skills', ascending: true }); // Order skills within categories
+      .order('created_at', { foreignTable: 'skills', ascending: true });
 
     if (fetchError) {
       console.error('Error fetching skill categories:', JSON.stringify(fetchError, null, 2));
@@ -286,7 +254,7 @@ export default function AdminDashboardPage() {
             iconName: sk.icon_name,
             categoryId: sk.category_id
         })) as SkillType[],
-        iconName: cat.icon_name, // map db column
+        iconName: cat.icon_name,
       }));
       setSkillCategories(mappedCategories);
     } else { setSkillCategories([]); }
@@ -318,10 +286,9 @@ export default function AdminDashboardPage() {
   const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0]; setImageFile(file);
-      projectForm.setValue('image_url', ''); // Clear URL if file is chosen
+      projectForm.setValue('image_url', ''); 
     } else {
       setImageFile(null);
-      // If clearing file input and currentProject had an image, restore its preview
       if (currentProject?.imageUrl) setImagePreview(currentProject.imageUrl); else setImagePreview(null);
     }
   };
@@ -447,7 +414,7 @@ const triggerDeleteConfirmation = (project: Project) => {
   const handleOpenSkillModal = (category_id: string, skill?: SkillType) => {
     setParentCategoryIdForNewSkill(category_id);
     setCurrentSkill(skill || null);
-    skillForm.setValue('category_id', category_id); // Ensure category_id is set
+    skillForm.setValue('category_id', category_id);
     setIsSkillModalOpen(true);
   };
 
@@ -542,7 +509,6 @@ const triggerDeleteConfirmation = (project: Project) => {
               <DialogContent className="sm:max-w-[625px]">
                 <DialogHeader><DialogTitle>{currentProject?.id ? 'Edit Project' : 'Add New Project'}</DialogTitle></DialogHeader>
                 <form onSubmit={projectForm.handleSubmit(onProjectSubmit)} className="grid gap-4 py-4 max-h-[80vh] overflow-y-auto p-2 scrollbar-hide">
-                  {/* Project form fields... */}
                   <div><Label htmlFor="title">Title</Label><Input id="title" {...projectForm.register("title")} />{projectForm.formState.errors.title && <p className="text-destructive text-sm mt-1">{projectForm.formState.errors.title.message}</p>}</div>
                   <div><Label htmlFor="description">Description</Label><Textarea id="description" {...projectForm.register("description")} />{projectForm.formState.errors.description && <p className="text-destructive text-sm mt-1">{projectForm.formState.errors.description.message}</p>}</div>
                   <div className="space-y-2">
@@ -569,7 +535,7 @@ const triggerDeleteConfirmation = (project: Project) => {
                 <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
                   {project.imageUrl && (
                         <div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border">
-                            <Image src={project.imageUrl} alt={project.title} layout="fill" objectFit="cover" />
+                            <Image src={project.imageUrl} alt={project.title || 'Project Image'} layout="fill" objectFit="cover" />
                         </div>
                     )}
                   <div className="flex-grow mb-3 sm:mb-0">
@@ -658,14 +624,10 @@ const triggerDeleteConfirmation = (project: Project) => {
           <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="grid gap-4 py-4">
             <div><Label htmlFor="categoryName">Name</Label><Input id="categoryName" {...categoryForm.register("name")} />{categoryForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{categoryForm.formState.errors.name.message}</p>}</div>
             <div>
-              <Label htmlFor="categoryIconName">Icon Name (Lucide)</Label>
+              <Label htmlFor="categoryIconName">
+                Icon Name (<a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lucide</a>)
+              </Label>
               <Input id="categoryIconName" {...categoryForm.register("icon_name")} placeholder="e.g., Laptop, Braces" />
-              {categoryIconPreview && (
-                <div className="mt-2 flex items-center gap-2">
-                  <p className="text-sm text-muted-foreground">Preview:</p>
-                  {React.createElement(categoryIconPreview, { className: "h-6 w-6 text-primary" })}
-                </div>
-              )}
             </div>
             <div><Label htmlFor="categorySortOrder">Sort Order</Label><Input id="categorySortOrder" type="number" {...categoryForm.register("sort_order")} /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentCategory?.id ? 'Save Changes' : 'Add Category'}</Button></DialogFooter>
@@ -684,14 +646,10 @@ const triggerDeleteConfirmation = (project: Project) => {
             <input type="hidden" {...skillForm.register("category_id")} />
             <div><Label htmlFor="skillName">Skill Name</Label><Input id="skillName" {...skillForm.register("name")} />{skillForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{skillForm.formState.errors.name.message}</p>}</div>
             <div>
-              <Label htmlFor="skillIconName">Icon Name (Lucide)</Label>
+              <Label htmlFor="skillIconName">
+                Icon Name (<a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lucide</a>)
+              </Label>
               <Input id="skillIconName" {...skillForm.register("icon_name")} placeholder="e.g., SquareCode, Orbit"/>
-              {skillIconPreview && (
-                <div className="mt-2 flex items-center gap-2">
-                  <p className="text-sm text-muted-foreground">Preview:</p>
-                  {React.createElement(skillIconPreview, { className: "h-6 w-6 text-primary" })}
-                </div>
-              )}
             </div>
             <div><Label htmlFor="skillDescription">Description (Optional)</Label><Textarea id="skillDescription" {...skillForm.register("description")} /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentSkill?.id ? 'Save Changes' : 'Add Skill'}</Button></DialogFooter>
@@ -716,3 +674,5 @@ const triggerDeleteConfirmation = (project: Project) => {
     </SectionWrapper>
   );
 }
+
+    
