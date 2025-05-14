@@ -23,7 +23,6 @@ export interface Database {
           title: string
           description: string | null
           image_url: string | null
-          // image_hint: string | null // Removed
           live_demo_url: string | null
           repo_url: string | null
           tags: string[] | null
@@ -36,7 +35,6 @@ export interface Database {
           title: string
           description?: string | null
           image_url?: string | null
-          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -49,7 +47,6 @@ export interface Database {
           title?: string
           description?: string | null
           image_url?: string | null
-          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -64,7 +61,7 @@ export interface Database {
           id: string
           name: string
           icon_name: string | null
-          icon_color: string | null
+          // icon_color: string | null // Removed
           sort_order: number | null
           created_at: string
         }
@@ -72,7 +69,7 @@ export interface Database {
           id?: string
           name: string
           icon_name?: string | null
-          icon_color?: string | null
+          // icon_color?: string | null // Removed
           sort_order?: number | null
           created_at?: string
         }
@@ -80,7 +77,7 @@ export interface Database {
           id?: string
           name?: string
           icon_name?: string | null
-          icon_color?: string | null
+          // icon_color?: string | null // Removed
           sort_order?: number | null
           created_at?: string
         }
@@ -120,14 +117,14 @@ export interface Database {
           }
         ]
       }
-      certifications: { 
+      certifications: {
         Row: {
           id: string
           title: string
           issuer: string
-          date: string 
+          date: string
           image_url: string | null
-          image_hint: string | null 
+          image_hint: string | null
           verify_url: string | null
           created_at: string
         }
@@ -153,14 +150,14 @@ export interface Database {
         }
         Relationships: []
       }
-      timeline_events: { 
+      timeline_events: {
         Row: {
           id: string
           date: string
           title: string
           description: string
-          icon_name: string 
-          type: string 
+          icon_name: string
+          type: string
           sort_order: number | null
           created_at: string
         }
@@ -208,12 +205,11 @@ export interface Project {
   id: string;
   title: string;
   description: string | null;
-  imageUrl: string | null; 
-  // imageHint: string | null; // Removed
+  imageUrl: string | null;
   liveDemoUrl?: string | null;
   repoUrl?: string | null;
   tags: string[] | null;
-  status: ProjectStatus | null; 
+  status: ProjectStatus | null;
   progress?: number | null;
   created_at: string;
 }
@@ -221,18 +217,19 @@ export interface Project {
 export interface Skill {
   id: string;
   name: string;
-  iconName: string | null; 
+  iconName: string | null;
   description: string | null;
-  categoryId?: string | null; 
+  categoryId?: string | null;
 }
 
 export interface SkillCategory {
   id: string;
   name: string;
-  iconName: string | null; 
-  iconColor?: string | null;
-  skills?: Skill[]; 
-  skillCount?: number; 
+  iconName: string | null;
+  // iconColor?: string | null; // Removed
+  skills?: Skill[];
+  skillCount?: number;
+  sort_order?: number | null; // Added to match admin form data and DB
 }
 
 export type TimelineEventType = 'work' | 'education' | 'certification' | 'milestone';
@@ -242,7 +239,7 @@ export interface TimelineEvent {
   date: string;
   title: string;
   description: string;
-  iconName: string; 
+  iconName: string;
   type: TimelineEventType;
   sort_order?: number | null;
 }
@@ -252,8 +249,8 @@ export interface Certification {
   title: string;
   issuer: string;
   date: string;
-  imageUrl: string | null; 
-  imageHint: string | null; 
-  verifyUrl?: string | null; 
+  imageUrl: string | null;
+  imageHint: string | null;
+  verifyUrl?: string | null;
   created_at: string;
 }

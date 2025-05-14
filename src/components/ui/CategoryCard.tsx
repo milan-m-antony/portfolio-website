@@ -1,25 +1,26 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Package as DefaultCategoryIcon } from 'lucide-react'; // Import default icon
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react'; // Import all icons
 
 interface CategoryCardProps {
   name: string;
   iconName: string | null;
-  iconColor?: string;
   skillCount: number;
   onClick: () => void;
 }
 
-export default function CategoryCard({ name, iconName, iconColor = 'text-primary', skillCount, onClick }: CategoryCardProps) {
-  let IconComponent: LucideIcon = LucideIcons.Package; // Default icon
+export default function CategoryCard({ name, iconName, skillCount, onClick }: CategoryCardProps) {
+  let IconComponent: LucideIcon = DefaultCategoryIcon; // Use imported default
 
   if (iconName) {
-    const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons];
-    if (typeof FoundIcon === 'function') {
-      IconComponent = FoundIcon as LucideIcon;
+    const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon | undefined;
+    if (FoundIcon && typeof FoundIcon === 'function') {
+      IconComponent = FoundIcon;
+    } else {
+      console.warn(`CategoryCard: Lucide icon "${iconName}" not found or is not a valid component. Falling back to default.`);
     }
   }
 
@@ -33,7 +34,7 @@ export default function CategoryCard({ name, iconName, iconColor = 'text-primary
       aria-label={`View skills in ${name} category`}
     >
       <CardHeader className="pb-2">
-        <IconComponent className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", iconColor)} />
+        <IconComponent className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", "text-primary")} />
         <CardTitle className="text-xl font-semibold text-foreground">{name}</CardTitle>
       </CardHeader>
       <CardContent>

@@ -9,9 +9,9 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home, UploadCloud, Eye, Tag, Lightbulb, Palette, GripVertical } from 'lucide-react';
+import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home, UploadCloud, Eye, Tag, Lightbulb, Palette, GripVertical, Package as DefaultCategoryIcon, CpuChip as DefaultSkillIcon, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { Project, ProjectStatus, SkillCategory, Skill as SkillType } from '@/types/supabase';
@@ -40,13 +40,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Badge } from "@/components/ui/badge"; // Added import for Badge
+import { Badge } from "@/components/ui/badge";
+import * as LucideIcons from 'lucide-react';
 
 
 const projectSchema = z.object({
@@ -75,7 +77,6 @@ const skillCategorySchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(2, "Category name must be at least 2 characters"),
   icon_name: z.string().optional().nullable(),
-  icon_color: z.string().optional().nullable(), // e.g., 'text-blue-500'
   sort_order: z.coerce.number().optional().nullable(),
 });
 type SkillCategoryFormData = z.infer<typeof skillCategorySchema>;
@@ -134,7 +135,7 @@ export default function AdminDashboardPage() {
 
   const categoryForm = useForm<SkillCategoryFormData>({
     resolver: zodResolver(skillCategorySchema),
-    defaultValues: { name: '', icon_name: '', icon_color: '', sort_order: 0 }
+    defaultValues: { name: '', icon_name: '', sort_order: 0 }
   });
 
   const skillForm = useForm<SkillFormData>({
@@ -189,16 +190,16 @@ export default function AdminDashboardPage() {
       });
       setImageFile(null); setImagePreview(null);
     }
-  }, [currentProject, projectForm.setValue, projectForm.reset]);
+  }, [currentProject, projectForm]);
 
 
   useEffect(() => {
     if (currentCategory) {
       categoryForm.reset(currentCategory);
     } else {
-      categoryForm.reset({ name: '', icon_name: '', icon_color: '', sort_order: 0 });
+      categoryForm.reset({ name: '', icon_name: '', sort_order: 0 });
     }
-  }, [currentCategory, categoryForm.reset]);
+  }, [currentCategory, categoryForm]);
 
   useEffect(() => {
     if (currentSkill) {
@@ -206,7 +207,7 @@ export default function AdminDashboardPage() {
     } else {
       skillForm.reset({ category_id: parentCategoryIdForNewSkill || '', name: '', icon_name: '', description: ''});
     }
-  }, [currentSkill, parentCategoryIdForNewSkill, skillForm.reset]);
+  }, [currentSkill, parentCategoryIdForNewSkill, skillForm]);
 
   const fetchProjects = async () => {
     setIsLoadingProjects(true);
@@ -247,7 +248,6 @@ export default function AdminDashboardPage() {
             categoryId: sk.category_id
         })) as SkillType[],
         iconName: cat.icon_name, // map db column
-        iconColor: cat.icon_color,
       }));
       setSkillCategories(mappedCategories);
     } else { setSkillCategories([]); }
@@ -324,24 +324,36 @@ export default function AdminDashboardPage() {
     fetchProjects(); router.refresh();
   };
 
-  const triggerProjectDeleteConfirmation = (project: Project) => {
-    setProjectToDelete(project); setShowProjectDeleteConfirm(true);
-  };
-
-  const performDeleteProject = async (projectId: string) => {
-    console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`);
-    if (!projectToDelete || projectToDelete.id !== projectId) {
-      console.warn("[AdminDashboard] Mismatch in project to delete state.");
-      toast({title: "Warning", description: "Could not confirm project for deletion. Please try again.", variant: "default"});
-      return;
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) {
+        console.warn("[AdminDashboard] No project selected for deletion.");
+        toast({ title: "Warning", description: "No project selected for deletion.", variant: "default" });
+        return;
     }
-    // TODO: Delete image from Supabase Storage if project.imageUrl exists
+    console.log(`[AdminDashboard] Attempting to delete project ID: ${projectToDelete.id}`);
 
-    const { error: deleteError } = await supabase.from('projects').delete().eq('id', projectId);
-    if (deleteError) { console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase error.'}`, variant: "destructive" }); }
-    else { console.log("[AdminDashboard] Project deleted successfully from Supabase."); toast({ title: "Success", description: "Project deleted successfully." }); fetchProjects(); router.refresh(); }
-    setShowProjectDeleteConfirm(false); setProjectToDelete(null);
-  };
+    // Optional: Delete image from Supabase Storage if projectToDelete.imageUrl exists
+    // Add logic here if needed.
+
+    const { error: deleteError } = await supabase.from('projects').delete().eq('id', projectToDelete.id);
+
+    if (deleteError) {
+        console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2));
+        toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase error.'}`, variant: "destructive" });
+    } else {
+        console.log("[AdminDashboard] Project deleted successfully from Supabase.");
+        toast({ title: "Success", description: "Project deleted successfully." });
+        fetchProjects();
+        router.refresh();
+    }
+    setShowProjectDeleteConfirm(false);
+    setProjectToDelete(null);
+};
+
+const triggerDeleteConfirmation = (project: Project) => {
+    setProjectToDelete(project);
+    setShowProjectDeleteConfirm(true);
+};
 
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? { ...project, tags: (Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')), } : null);
@@ -409,6 +421,12 @@ export default function AdminDashboardPage() {
     if (error) { toast({ title: "Error", description: `Failed to delete skill: ${error.message}`, variant: "destructive" }); }
     else { toast({ title: "Success", description: "Skill deleted." }); fetchSkillCategories(); router.refresh(); }
     setShowSkillDeleteConfirm(false); setSkillToDelete(null);
+  };
+
+  const getIconComponent = (iconName: string | null | undefined, defaultIcon: LucideIcons.LucideIcon = HelpCircle): LucideIcons.LucideIcon => {
+    if (!iconName) return defaultIcon;
+    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcons.LucideIcon | undefined;
+    return Icon && typeof Icon === 'function' ? Icon : defaultIcon;
   };
 
 
@@ -491,7 +509,7 @@ export default function AdminDashboardPage() {
                   <div className="space-y-2">
                     <Label htmlFor="project_image_file">Project Image File</Label>
                     <div className="flex items-center gap-3"><Input id="project_image_file" type="file" accept="image/*" onChange={handleImageFileChange} className="flex-grow" /><UploadCloud className="h-6 w-6 text-muted-foreground"/></div>
-                    {(imagePreview || currentImageUrlForPreview) && (<div className="mt-2 p-2 border rounded-md bg-muted aspect-video relative w-full max-w-xs mx-auto"><Image src={imagePreview || currentImageUrlForPreview || "https://placehold.co/600x400.png"} alt="Image preview" layout="fill" objectFit="contain" className="rounded"/></div>)}
+                    {(imagePreview || currentImageUrlForPreview) && (<div className="mt-2 p-2 border rounded-md bg-muted aspect-video relative w-full max-w-xs mx-auto"><Image src={imagePreview || currentImageUrlForPreview || "https://placehold.co/600x400.png"} alt="Image preview" fill objectFit="contain" className="rounded"/></div>)}
                     <div><Label htmlFor="image_url" className="text-xs text-muted-foreground">Or enter Image URL (upload will override)</Label><Input id="image_url" {...projectForm.register("image_url")} placeholder="https://example.com/image.png" />{projectForm.formState.errors.image_url && <p className="text-destructive text-sm mt-1">{projectForm.formState.errors.image_url.message}</p>}</div>
                   </div>
                   <div><Label htmlFor="live_demo_url">Live Demo URL</Label><Input id="live_demo_url" {...projectForm.register("live_demo_url")} placeholder="https://example.com/demo" />{projectForm.formState.errors.live_demo_url && <p className="text-destructive text-sm mt-1">{projectForm.formState.errors.live_demo_url.message}</p>}</div>
@@ -510,7 +528,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-4">
             {projects.map((project) => (
                 <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
-                  {project.imageUrl && (<div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border"><Image src={project.imageUrl} alt={project.title || 'Project image'} layout="fill" objectFit="cover" /></div>)}
+                  {project.imageUrl && (<div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border"><Image src={project.imageUrl} alt={project.title} fill objectFit="cover" /></div>)}
                   <div className="flex-grow mb-3 sm:mb-0">
                     <h4 className="font-semibold text-lg">{project.title}</h4>
                     <p className="text-sm text-muted-foreground">Status: <span className={`font-medium ${project.status === 'Deployed' ? 'text-green-600' : project.status === 'In Progress' ? 'text-blue-600' : 'text-gray-600'}`}>{project.status}</span>{project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}</p>
@@ -518,7 +536,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="flex space-x-2 self-start sm:self-center shrink-0">
                     <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}><Edit className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
-                    <Button variant="destructive" size="sm" onClick={() => triggerProjectDeleteConfirmation(project)}>
+                    <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
                          <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
                     </Button>
                   </div>
@@ -528,7 +546,7 @@ export default function AdminDashboardPage() {
         </CardContent>
       </Card>
       <AlertDialog open={showProjectDeleteConfirm} onOpenChange={setShowProjectDeleteConfirm}>
-        <AlertDialogContent className="bg-destructive border-destructive text-destructive-foreground"><AlertDialogHeader><AlertDialogTitle className="text-destructive-foreground">Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription className="text-destructive-foreground/90">This action cannot be undone. This will permanently delete the project "{projectToDelete?.title}".</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => { setShowProjectDeleteConfirm(false); setProjectToDelete(null);}} className={cn(buttonVariants({ variant: "outline" }), "border-destructive-foreground/40 text-destructive-foreground", "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60")}>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => {if (projectToDelete) performDeleteProject(projectToDelete.id);}} className={cn(buttonVariants({ variant: "default" }), "bg-destructive-foreground text-destructive", "hover:bg-destructive-foreground/90")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent className="bg-destructive border-destructive text-destructive-foreground"><AlertDialogHeader><AlertDialogTitle className="text-destructive-foreground">Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription className="text-destructive-foreground/90">This action cannot be undone. This will permanently delete the project "{projectToDelete?.title}".</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => { setShowProjectDeleteConfirm(false); setProjectToDelete(null);}} className={cn(buttonVariants({ variant: "outline" }), "border-destructive-foreground/40 text-destructive-foreground", "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60")}>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteProject} className={cn(buttonVariants({ variant: "default" }), "bg-destructive-foreground text-destructive", "hover:bg-destructive-foreground/90")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
 
       {/* Skills Management Section */}
@@ -543,12 +561,13 @@ export default function AdminDashboardPage() {
           {isLoadingSkills ? <p className="text-center text-muted-foreground">Loading skills...</p> : (
             skillCategories.length === 0 ? <p className="text-center text-muted-foreground py-8">No skill categories found. Add one to get started!</p> : (
               <Accordion type="multiple" className="w-full">
-                {skillCategories.map(category => (
+                {skillCategories.map(category => {
+                  const CategoryIcon = getIconComponent(category.iconName, DefaultCategoryIcon);
+                  return (
                   <AccordionItem value={category.id} key={category.id}>
                     <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 rounded-md">
                       <div className="flex items-center gap-3">
-                        {/* Placeholder for dynamic icon based on category.icon_name */}
-                        <Tag className="h-5 w-5 text-primary"/>
+                        <CategoryIcon className="h-5 w-5 text-primary"/>
                         <span className="font-medium text-lg">{category.name}</span>
                         <Badge variant="outline">{category.skills?.length || 0} skills</Badge>
                       </div>
@@ -561,11 +580,12 @@ export default function AdminDashboardPage() {
                       </div>
                       {category.skills && category.skills.length > 0 ? (
                         <div className="space-y-2">
-                          {category.skills.map(skill => (
+                          {category.skills.map(skill => {
+                            const SkillIcon = getIconComponent(skill.iconName, DefaultSkillIcon);
+                            return (
                             <Card key={skill.id} className="p-3 flex justify-between items-center bg-card hover:shadow-sm">
                               <div className="flex items-center gap-2">
-                                {/* Placeholder for dynamic icon based on skill.icon_name */}
-                                <Lightbulb className="h-4 w-4 text-secondary-foreground/70"/>
+                                <SkillIcon className="h-4 w-4 text-secondary-foreground/70"/>
                                 <div>
                                   <p className="font-medium">{skill.name}</p>
                                   {skill.description && <p className="text-xs text-muted-foreground">{skill.description}</p>}
@@ -576,12 +596,12 @@ export default function AdminDashboardPage() {
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => triggerSkillDeleteConfirmation(skill)}><Trash2 className="h-4 w-4"/></Button>
                               </div>
                             </Card>
-                          ))}
+                          )})}
                         </div>
                       ) : <p className="text-sm text-muted-foreground text-center py-3">No skills in this category yet.</p>}
                     </AccordionContent>
                   </AccordionItem>
-                ))}
+                )})}
               </Accordion>
             )
           )}
@@ -595,7 +615,6 @@ export default function AdminDashboardPage() {
           <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="grid gap-4 py-4">
             <div><Label htmlFor="categoryName">Name</Label><Input id="categoryName" {...categoryForm.register("name")} />{categoryForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{categoryForm.formState.errors.name.message}</p>}</div>
             <div><Label htmlFor="categoryIconName">Icon Name (Lucide)</Label><Input id="categoryIconName" {...categoryForm.register("icon_name")} placeholder="e.g., Laptop, Braces" /></div>
-            <div><Label htmlFor="categoryIconColor">Icon Color (Tailwind Class)</Label><Input id="categoryIconColor" {...categoryForm.register("icon_color")} placeholder="e.g., text-blue-500" /></div>
             <div><Label htmlFor="categorySortOrder">Sort Order</Label><Input id="categorySortOrder" type="number" {...categoryForm.register("sort_order")} /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentCategory?.id ? 'Save Changes' : 'Add Category'}</Button></DialogFooter>
           </form>
