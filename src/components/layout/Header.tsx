@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail } from 'lucide-react'; // Removed Shield
+import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider';
@@ -19,7 +19,6 @@ const navItems = [
   { href: '#certifications', label: 'Certifications', icon: Award },
   { href: '#resume', label: 'Resume', icon: FileText },
   { href: '#contact', label: 'Contact', icon: Mail },
-  // { href: '/admin', label: 'Admin', icon: Shield }, // Removed Admin link
 ];
 
 const NavLinks = ({ onClick, activeHref }: { onClick?: () => void; activeHref: string }) => (
@@ -67,7 +66,7 @@ const NavLinks = ({ onClick, activeHref }: { onClick?: () => void; activeHref: s
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme(); // theme can be 'light', 'dark', 'system'
   const [activeLink, setActiveLink] = useState<string>('#hero');
   const pathname = usePathname();
 
@@ -78,17 +77,13 @@ export default function Header() {
       const currentPath = pathname;
       const currentHash = window.location.hash;
 
-      if (currentPath.startsWith('/admin')) { // Check if path starts with /admin
-        // Potentially set a specific admin link active or none of the main navs
-        // For now, if on an admin page, no main nav item will be "active" unless explicitly handled
+      if (currentPath.startsWith('/admin')) {
         const adminItem = navItems.find(item => item.href === currentPath);
         if (adminItem) {
             setActiveLink(currentPath);
         } else {
-            // If a more specific admin sub-page, ensure no main nav link is active
-            // or handle admin sub-navigation separately if it existed
             const isSubAdminPage = navItems.some(item => currentPath.startsWith(item.href) && item.href !== currentPath);
-            if(!isSubAdminPage) setActiveLink(''); // No main nav active
+            if(!isSubAdminPage) setActiveLink('');
         }
         return;
       }
@@ -157,8 +152,19 @@ export default function Header() {
 
   if (!mounted) return null;
 
+  // Determine effective theme for icon display and toggle logic
+  let effectiveTheme = theme;
+  if (theme === 'system' && typeof window !== 'undefined') {
+    effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    // Use the effectiveTheme for toggling decision
+    if (effectiveTheme === 'dark') {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
   };
 
   return (
@@ -175,7 +181,7 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {effectiveTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
           <div className="md:hidden">
