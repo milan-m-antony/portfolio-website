@@ -47,7 +47,10 @@ export default function AdminDashboardPage() {
 
   // Ensure localStorage check has completed and user is authenticated client-side
   if (typeof window !== 'undefined' && localStorage.getItem('isAdminAuthenticated') !== 'true') {
-    return null; // Or a loading state, handled by useEffect redirect
+    // This case should ideally be handled by the useEffect redirect.
+    // If somehow reached, it means the redirect hasn't happened yet or localStorage changed.
+    // Returning null or a loading indicator is fine as the redirect should occur shortly.
+    return null; 
   }
   
 
