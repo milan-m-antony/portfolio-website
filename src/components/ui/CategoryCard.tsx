@@ -1,14 +1,14 @@
-
 // src/components/ui/CategoryCard.tsx
-import Image from 'next/image'; // Import next/image
-import { ArrowRight, type LucideProps } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, Package as DefaultPackageIcon, HelpCircle as UltimateFallbackIcon } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import React from 'react';
 
 interface CategoryCardProps {
   name: string;
-  iconImageUrl: string | null | undefined; // Changed from iconName
+  iconImageUrl: string | null | undefined;
   skillCount: number;
   onClick: () => void;
 }
@@ -46,17 +46,21 @@ export default function CategoryCard({ name, iconImageUrl, skillCount, onClick }
     >
       <CardHeader className="pb-2 flex flex-col items-center justify-center">
         {iconImageUrl ? (
-          <div className="relative h-12 w-12 mb-3 rounded-md overflow-hidden">
+          <div className={cn(
+            "relative h-12 w-12 mb-3 rounded-md overflow-hidden",
+            "dark:bg-secondary" // Add lighter background in dark mode for icon container
+          )}>
             <Image
               src={iconImageUrl}
               alt={`${name} category icon`}
               layout="fill"
-              objectFit="contain" // Use 'contain' or 'cover' based on preference
+              objectFit="contain"
               className="transition-transform group-hover:scale-110"
-              data-ai-hint="category icon" // Generic hint
+              data-ai-hint="category icon"
             />
           </div>
         ) : (
+          // Fallback to SVG if no image URL
           <DefaultCategorySvgFallback className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", "text-primary")} />
         )}
         <CardTitle className="text-xl font-semibold text-foreground mt-1">{name}</CardTitle>

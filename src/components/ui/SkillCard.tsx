@@ -1,10 +1,10 @@
-
 // src/components/ui/SkillCard.tsx
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Skill } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { HelpCircle as UltimateFallbackIcon } from 'lucide-react'; // Keep for extreme fallback
 
 interface SkillCardProps {
   skill: Skill;
@@ -45,15 +45,21 @@ export default function SkillCard({ skill }: SkillCardProps) {
     )}>
       <CardContent className="flex flex-col items-center justify-start gap-3 pt-4 sm:pt-5 md:pt-6 flex-grow w-full">
         {skill.iconImageUrl ? (
-          <Image
-            src={skill.iconImageUrl}
-            alt={`${skill.name} icon`}
-            width={48} // Adjust size as needed
-            height={48} // Adjust size as needed
-            className="rounded-md mb-1 transition-transform group-hover:scale-110 object-contain"
-            data-ai-hint="skill icon"
-          />
+          <div className={cn(
+            "relative h-12 w-12 mb-1 rounded-md overflow-hidden", // Sized container for the image
+            "dark:bg-secondary" // Add lighter background in dark mode for icon container
+          )}>
+            <Image
+              src={skill.iconImageUrl}
+              alt={`${skill.name} icon`}
+              layout="fill"
+              objectFit="contain"
+              className="transition-transform group-hover:scale-110"
+              data-ai-hint="skill icon"
+            />
+          </div>
         ) : (
+          // Fallback to SVG if no image URL
           <DefaultSkillSvgIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mb-1 transition-transform group-hover:scale-110" />
         )}
         <p className="text-sm sm:text-base font-semibold text-foreground">{skill.name}</p>
