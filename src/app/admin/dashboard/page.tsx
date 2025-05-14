@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState<ProjectFormData | null>(null);
+  const [currentProject, setCurrentProject] = useState<Omit<ProjectFormData, 'tags'> & { tags: string } | null>(null);
   const { toast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm<ProjectFormData>({
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '',
+        tags: '', // Expecting string here for the input field
         status: 'Concept',
         progress: null,
       }
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
       setValue('image_hint', currentProject.image_hint || '');
       setValue('live_demo_url', currentProject.live_demo_url || '');
       setValue('repo_url', currentProject.repo_url || '');
-      setValue('tags', (currentProject.tags || []).join(', '));
+      setValue('tags', currentProject.tags); // currentProject.tags is already a string
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress || null);
     } else {
@@ -137,7 +137,11 @@ export default function AdminDashboardPage() {
     const correctUsername = "milanmantony2002@gmail.com";
     const correctPassword = "Ma@#9746372046";
 
-    if (username === correctUsername && password === correctPassword) {
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+
+    if (trimmedUsername === correctUsername && trimmedPassword === correctPassword) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('isAdminAuthenticated', 'true');
       }
@@ -160,12 +164,12 @@ export default function AdminDashboardPage() {
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
-    const projectDataToSave: Omit<ProjectFormData, 'id'> & { id?: string; progress: number | null; tags: string[] } = {
+    const projectDataToSave: Omit<ProjectFormData, 'id' | 'tags'> & { id?: string; progress: number | null; tags: string[] } = {
       ...formData,
-      image_url: formData.image_url || null,
-      image_hint: formData.image_hint || null,
-      live_demo_url: formData.live_demo_url || null,
-      repo_url: formData.repo_url || null,
+      image_url: formData.image_url || undefined, // Use undefined for Supabase to treat as null if empty
+      image_hint: formData.image_hint || undefined,
+      live_demo_url: formData.live_demo_url || undefined,
+      repo_url: formData.repo_url || undefined,
       progress: formData.status === 'In Progress' && formData.progress !== undefined ? Number(formData.progress) : null,
       tags: Array.isArray(formData.tags) ? formData.tags : (formData.tags as unknown as string).split(',').map(tag => tag.trim()).filter(Boolean),
     };
@@ -220,14 +224,13 @@ export default function AdminDashboardPage() {
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
         ...project,
-        // Ensure these fields from Project (DB row) are correctly mapped to ProjectFormData
         id: project.id,
         title: project.title,
         description: project.description || '',
-        image_url: project.image_url || '', 
-        image_hint: project.image_hint || '',
-        live_demo_url: project.live_demo_url || '',
-        repo_url: project.repo_url || '',
+        image_url: project.imageUrl || '', 
+        image_hint: project.imageHint || '',
+        live_demo_url: project.liveDemoUrl || '',
+        repo_url: project.repoUrl || '',
         tags: (project.tags || []).join(', '), 
         status: project.status as ProjectStatus || 'Concept',
         progress: project.progress !== undefined ? project.progress : null,
@@ -349,7 +352,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <Label htmlFor="tags">Tags (comma-separated)</Label>
-                    <Input id="tags" {...register("tags")} placeholder="React, Next.js, Supabase" />
+                    <Input id="tags" {...register("tags" as any)} placeholder="React, Next.js, Supabase" />
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
@@ -365,7 +368,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <Label htmlFor="progress">Progress (0-100, for 'In Progress')</Label>
-                    <Input id="progress" type="number" {...register("progress", { valueAsNumber: true })} />
+                    <Input id="progress" type="number" {...register("progress", {setValueAs: (v) => (v === '' || v === null ? null : Number(v))})} />
                      {formErrors.progress && <p className="text-destructive text-sm mt-1">{formErrors.progress.message}</p>}
                   </div>
                   <DialogFooter>
@@ -427,6 +430,3 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
-
-
-    
