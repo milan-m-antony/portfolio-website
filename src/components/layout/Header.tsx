@@ -4,10 +4,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail, Shield } from 'lucide-react';
+import { Menu, X, Sun, Moon, Code2, Home, User, Briefcase, Wrench, Map as MapIcon, Award, FileText, Mail } from 'lucide-react'; // Removed Shield
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useTheme } from '@/contexts/ThemeProvider'; 
+import { useTheme } from '@/contexts/ThemeProvider';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -19,7 +19,7 @@ const navItems = [
   { href: '#certifications', label: 'Certifications', icon: Award },
   { href: '#resume', label: 'Resume', icon: FileText },
   { href: '#contact', label: 'Contact', icon: Mail },
-  { href: '/admin', label: 'Admin', icon: Shield },
+  // { href: '/admin', label: 'Admin', icon: Shield }, // Removed Admin link
 ];
 
 const NavLinks = ({ onClick, activeHref }: { onClick?: () => void; activeHref: string }) => (
@@ -51,9 +51,9 @@ const NavLinks = ({ onClick, activeHref }: { onClick?: () => void; activeHref: s
                 {item.label}
               </span>
               <IconComponent
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 
-                           inline-block transition-all duration-300 ease-in-out 
-                           translate-x-[-120%] group-hover:translate-x-0 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2
+                           inline-block transition-all duration-300 ease-in-out
+                           translate-x-[-120%] group-hover:translate-x-0
                            text-primary opacity-0 group-hover:opacity-100 h-5 w-5"
               />
             </>
@@ -78,10 +78,21 @@ export default function Header() {
       const currentPath = pathname;
       const currentHash = window.location.hash;
 
-      if (currentPath === '/admin') {
-        setActiveLink('/admin');
+      if (currentPath.startsWith('/admin')) { // Check if path starts with /admin
+        // Potentially set a specific admin link active or none of the main navs
+        // For now, if on an admin page, no main nav item will be "active" unless explicitly handled
+        const adminItem = navItems.find(item => item.href === currentPath);
+        if (adminItem) {
+            setActiveLink(currentPath);
+        } else {
+            // If a more specific admin sub-page, ensure no main nav link is active
+            // or handle admin sub-navigation separately if it existed
+            const isSubAdminPage = navItems.some(item => currentPath.startsWith(item.href) && item.href !== currentPath);
+            if(!isSubAdminPage) setActiveLink(''); // No main nav active
+        }
         return;
       }
+
 
       if (currentPath === '/') {
         if (currentHash && currentHash !== '#') {
@@ -93,7 +104,7 @@ export default function Header() {
 
         let newActiveLink = '#hero';
         let minDistance = Infinity;
-        const referencePoint = 150; // Pixels from top of viewport to consider a section active
+        const referencePoint = 150; 
 
         for (const item of navItems) {
           if (item.href.startsWith('/')) continue;
@@ -101,18 +112,12 @@ export default function Header() {
           const element = document.getElementById(item.href.substring(1));
           if (element) {
             const rect = element.getBoundingClientRect();
-            
-            // Check if the section is reasonably visible
             const elementTop = rect.top;
             const elementBottom = rect.bottom;
             const viewportHeight = window.innerHeight;
-
-            // Is the section in view? Check if element is between top and bottom of viewport
-            // A section is "in view" if its top is less than viewport height and its bottom is greater than 0.
             const isInView = elementTop < viewportHeight && elementBottom > 0;
 
             if (isInView) {
-                // Calculate distance from the reference point (e.g. top of viewport or a bit lower)
                 const distance = Math.abs(elementTop - referencePoint);
                 if (distance < minDistance) {
                     minDistance = distance;
@@ -121,24 +126,20 @@ export default function Header() {
             }
           }
         }
-        // If scrolled to the very bottom, 'contact' should be active
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) { // 50px tolerance
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) { 
             const contactItem = navItems.find(item => item.href === '#contact');
             if (contactItem) newActiveLink = contactItem.href;
         }
-        // If scrolled to the very top, 'hero' should be active
         else if (window.scrollY <= 50) {
             const heroItem = navItems.find(item => item.href === '#hero');
             if (heroItem) newActiveLink = heroItem.href;
         }
-
-
         setActiveLink(newActiveLink);
       }
     };
 
-    if (mounted) { // Only run listeners if component is mounted
-      determineActiveLink(); // Initial determination
+    if (mounted) {
+      determineActiveLink();
       window.addEventListener('scroll', determineActiveLink, { passive: true });
       window.addEventListener('hashchange', determineActiveLink);
       window.addEventListener('resize', determineActiveLink);
@@ -184,14 +185,14 @@ export default function Header() {
                   {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent 
-                side="right" 
+              <SheetContent
+                side="right"
                 className="w-[300px] sm:w-[340px] p-0 transition-transform duration-500 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-right-full"
               >
                 <SheetHeader className="p-6 border-b text-left">
                   <SheetTitle>
-                    <Link 
-                      href="/" 
+                    <Link
+                      href="/"
                       className="flex items-center gap-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
