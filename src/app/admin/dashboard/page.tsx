@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { Project, ProjectStatus } from '@/types/supabase'; 
@@ -43,12 +44,13 @@ const projectSchema = z.object({
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
-// Type for currentProject state when editing (tags is a string for the form input)
-type CurrentProjectEditState = Omit<Project, 'tags' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl'> & {
-    tags: string; // Form input expects comma-separated string
+
+type CurrentProjectEditState = Omit<Project, 'tags' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl' | 'created_at'> & {
+    tags: string; 
     imageUrl?: string | null;
     liveDemoUrl?: string | null;
     repoUrl?: string | null;
+    created_at?: string; 
 };
 
 
@@ -101,7 +103,7 @@ export default function AdminDashboardPage() {
       setValue('image_hint', currentProject.imageHint || '');
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
-      setValue('tags', currentProject.tags); // currentProject.tags is already a string
+      setValue('tags', currentProject.tags); 
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress || null);
     } else {
@@ -150,7 +152,7 @@ export default function AdminDashboardPage() {
     if (trimmedUsername === correctUsername && trimmedPassword === correctPassword) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('isAdminAuthenticated', 'true');
-        window.dispatchEvent(new CustomEvent('authChange')); // Dispatch event
+        window.dispatchEvent(new CustomEvent('authChange')); 
       }
       setIsAuthenticatedForRender(true);
       fetchProjects(); 
@@ -163,7 +165,7 @@ export default function AdminDashboardPage() {
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdminAuthenticated');
-      window.dispatchEvent(new CustomEvent('authChange')); // Dispatch event
+      window.dispatchEvent(new CustomEvent('authChange')); 
     }
     setIsAuthenticatedForRender(false);
     setUsername('');
@@ -179,11 +181,11 @@ export default function AdminDashboardPage() {
       live_demo_url: formData.live_demo_url || undefined,
       repo_url: formData.repo_url || undefined,
       progress: formData.status === 'In Progress' && formData.progress !== undefined ? Number(formData.progress) : null,
-      tags: formData.tags, // Already an array due to zod transform
+      tags: formData.tags, 
     };
     
 
-    if (currentProject?.id) { // Update existing project
+    if (currentProject?.id) { 
       const { error: updateError } = await supabase
         .from('projects')
         .update(projectDataToSave)
@@ -194,7 +196,7 @@ export default function AdminDashboardPage() {
       } else {
         toast({ title: "Success", description: "Project updated successfully." });
       }
-    } else { // Create new project
+    } else { 
       const { id, ...dataToInsert } = projectDataToSave; 
       const { error: insertError } = await supabase
         .from('projects')
@@ -231,16 +233,16 @@ export default function AdminDashboardPage() {
   
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
-        ...project, // Spread all properties from Project
+        ...project, 
         id: project.id,
         title: project.title,
         description: project.description || '',
-        imageUrl: project.imageUrl || null, // Use correct property names from Project type
+        imageUrl: project.imageUrl || null, 
         imageHint: project.imageHint || '',
         liveDemoUrl: project.liveDemoUrl || null,
         repoUrl: project.repoUrl || null,
-        tags: (project.tags || []).join(', '), // Convert array to string for form
-        status: project.status as ProjectStatus || 'Concept', // Ensure status is valid ProjectStatus
+        tags: (project.tags || []).join(', '), 
+        status: project.status as ProjectStatus || 'Concept', 
         progress: project.progress !== undefined ? project.progress : null,
     } : null);
     setIsProjectModalOpen(true);
@@ -290,7 +292,14 @@ export default function AdminDashboardPage() {
                 <LogIn className="mr-2 h-5 w-5" /> Sign In
               </Button>
             </form>
-            <p className="mt-6 text-xs text-center text-muted-foreground">Restricted area. Authorized personnel only.</p>
+            <div className="mt-6 text-center">
+                <Button variant="link" asChild>
+                    <Link href="/">
+                        <Home className="mr-2 h-4 w-4" /> Back to Portfolio
+                    </Link>
+                </Button>
+            </div>
+            <p className="mt-4 text-xs text-center text-muted-foreground">Restricted area. Authorized personnel only.</p>
           </CardContent>
         </Card>
       </SectionWrapper>
@@ -438,3 +447,5 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
+
+
