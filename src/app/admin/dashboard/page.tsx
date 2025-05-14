@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import type { Project, ProjectStatus } from '@/types/supabase'; 
+import type { Project, ProjectStatus } from '@/types/supabase';
 import {
   Dialog,
   DialogContent,
@@ -31,26 +31,25 @@ import { useToast } from '@/hooks/use-toast';
 
 
 const projectSchema = z.object({
-  id: z.string().uuid().optional(), 
+  id: z.string().uuid().optional(),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   image_hint: z.string().optional(),
   live_demo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   repo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)), 
+  tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)),
   status: z.enum(['Deployed', 'In Progress', 'Prototype', 'Archived', 'Concept', 'Completed']),
   progress: z.coerce.number().min(0).max(100).optional().nullable(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-type CurrentProjectEditState = Omit<Project, 'tags' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl' | 'created_at'> & {
-    tags: string; 
-    imageUrl?: string | null;
-    liveDemoUrl?: string | null;
-    repoUrl?: string | null;
-    created_at?: string; 
+// This type is for the `currentProject` state used to populate the form.
+// It mirrors the `Project` interface but with tags as a string.
+type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at'> & {
+    tags: string; // Tags as a comma-separated string for the form input
+    created_at?: string; // Make created_at optional for new projects
 };
 
 
@@ -77,7 +76,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', 
+        tags: '',
         status: 'Concept',
         progress: null,
       }
@@ -93,7 +92,7 @@ export default function AdminDashboardPage() {
       }
     }
   }, []);
-  
+
   useEffect(() => {
     if (currentProject) {
       setValue('id', currentProject.id);
@@ -103,9 +102,9 @@ export default function AdminDashboardPage() {
       setValue('image_hint', currentProject.imageHint || '');
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
-      setValue('tags', currentProject.tags); 
+      setValue('tags', currentProject.tags); // currentProject.tags is already a string here
       setValue('status', currentProject.status || 'Concept');
-      setValue('progress', currentProject.progress || null);
+      setValue('progress', currentProject.progress === null || currentProject.progress === undefined ? null : Number(currentProject.progress));
     } else {
       reset({
         title: '',
@@ -126,15 +125,31 @@ export default function AdminDashboardPage() {
     setIsLoadingProjects(true);
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select('*')
+      .select('*') // Fetches all columns with their DB names (e.g., image_url)
       .order('created_at', { ascending: false });
 
     if (fetchError) {
       console.error('Error fetching projects:', JSON.stringify(fetchError, null, 2));
       toast({ title: "Error", description: `Could not fetch projects: ${fetchError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       setProjects([]);
+    } else if (data) {
+      // Explicitly map Supabase row data to the Project interface
+      const mappedProjects = data.map(p => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        imageUrl: p.image_url,       // Map snake_case to camelCase
+        imageHint: p.image_hint,     // Map snake_case to camelCase
+        liveDemoUrl: p.live_demo_url,// Map snake_case to camelCase
+        repoUrl: p.repo_url,         // Map snake_case to camelCase
+        tags: p.tags,                // Assumes tags is string[] | null from DB
+        status: p.status as ProjectStatus, // Cast or validate status
+        progress: p.progress,        // Map snake_case to camelCase
+        created_at: p.created_at,
+      }));
+      setProjects(mappedProjects);
     } else {
-      setProjects(data as Project[]);
+      setProjects([]);
     }
     setIsLoadingProjects(false);
   };
@@ -148,14 +163,13 @@ export default function AdminDashboardPage() {
     const trimmedUsername = username.trim();
     const trimmedPassword = password.trim();
 
-
     if (trimmedUsername === correctUsername && trimmedPassword === correctPassword) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('isAdminAuthenticated', 'true');
-        window.dispatchEvent(new CustomEvent('authChange')); 
+        window.dispatchEvent(new CustomEvent('authChange'));
       }
       setIsAuthenticatedForRender(true);
-      fetchProjects(); 
+      fetchProjects();
     } else {
       setError("Invalid username or password.");
       setIsAuthenticatedForRender(false);
@@ -165,27 +179,31 @@ export default function AdminDashboardPage() {
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdminAuthenticated');
-      window.dispatchEvent(new CustomEvent('authChange')); 
+      window.dispatchEvent(new CustomEvent('authChange'));
     }
     setIsAuthenticatedForRender(false);
     setUsername('');
     setPassword('');
-    setProjects([]); 
+    setProjects([]);
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
-    const projectDataToSave: Omit<ProjectFormData, 'id' | 'tags'> & { id?: string; progress: number | null; tags: string[] } = {
-      ...formData,
-      image_url: formData.image_url || undefined, 
-      image_hint: formData.image_hint || undefined,
-      live_demo_url: formData.live_demo_url || undefined,
-      repo_url: formData.repo_url || undefined,
-      progress: formData.status === 'In Progress' && formData.progress !== undefined ? Number(formData.progress) : null,
-      tags: formData.tags, 
+    // formData uses Zod schema names (e.g., image_url)
+    // Map to Supabase column names if they differ or camelCase for internal logic
+    const projectDataToSave = {
+      title: formData.title,
+      description: formData.description,
+      image_url: formData.image_url || null, // Ensure null if empty for DB
+      image_hint: formData.image_hint || null,
+      live_demo_url: formData.live_demo_url || null,
+      repo_url: formData.repo_url || null,
+      tags: formData.tags, // Already an array from Zod transform
+      status: formData.status,
+      progress: formData.status === 'In Progress' && formData.progress !== undefined && formData.progress !== null ? Number(formData.progress) : null,
     };
-    
 
-    if (currentProject?.id) { 
+    if (currentProject?.id) {
+      // Update existing project
       const { error: updateError } = await supabase
         .from('projects')
         .update(projectDataToSave)
@@ -196,11 +214,11 @@ export default function AdminDashboardPage() {
       } else {
         toast({ title: "Success", description: "Project updated successfully." });
       }
-    } else { 
-      const { id, ...dataToInsert } = projectDataToSave; 
+    } else {
+      // Add new project
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(dataToInsert as any); 
+        .insert(projectDataToSave as any); // Use 'as any' if types are slightly off for insert vs update
       if (insertError) {
         console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
         toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
@@ -210,8 +228,8 @@ export default function AdminDashboardPage() {
     }
     setIsProjectModalOpen(false);
     setCurrentProject(null);
-    fetchProjects(); 
-    router.refresh(); 
+    fetchProjects();
+    router.refresh();
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -230,20 +248,12 @@ export default function AdminDashboardPage() {
       router.refresh();
     }
   };
-  
+
   const handleOpenProjectModal = (project?: Project) => {
+    // project object here comes from the 'projects' state, which should now be correctly mapped
     setCurrentProject(project ? {
-        ...project, 
-        id: project.id,
-        title: project.title,
-        description: project.description || '',
-        imageUrl: project.imageUrl || null, 
-        imageHint: project.imageHint || '',
-        liveDemoUrl: project.liveDemoUrl || null,
-        repoUrl: project.repoUrl || null,
-        tags: (project.tags || []).join(', '), 
-        status: project.status as ProjectStatus || 'Concept', 
-        progress: project.progress !== undefined ? project.progress : null,
+        ...project, // Spread the correctly mapped project
+        tags: (project.tags || []).join(', '), // Convert tags array to string for form
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -282,11 +292,11 @@ export default function AdminDashboardPage() {
               )}
               <div className="space-y-2">
                 <Label htmlFor="username">Email Address</Label>
-                <Input id="username" type="email" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="milanmantony2002@gmail.com" required className="bg-background/70 focus:bg-background" />
+                <Input id="username" type="email" value={username} onChange={(e) => setUsername(e.target.value.trim())} placeholder="milanmantony2002@gmail.com" required className="bg-background/70 focus:bg-background" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required className="bg-background/70 focus:bg-background" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value.trim())} placeholder="••••••••" required className="bg-background/70 focus:bg-background" />
               </div>
               <Button type="submit" className="w-full text-lg py-3">
                 <LogIn className="mr-2 h-5 w-5" /> Sign In
@@ -317,7 +327,7 @@ export default function AdminDashboardPage() {
           <LogOut className="mr-2 h-4 w-4" /> Logout
         </Button>
       </div>
-      
+
 
       {/* Projects Management Section */}
       <Card className="mb-8 shadow-lg">
@@ -326,7 +336,7 @@ export default function AdminDashboardPage() {
             Manage Projects
             <Dialog open={isProjectModalOpen} onOpenChange={(isOpen) => {
                 setIsProjectModalOpen(isOpen);
-                if (!isOpen) setCurrentProject(null); 
+                if (!isOpen) setCurrentProject(null);
              }}>
               <DialogTrigger asChild>
                 <Button onClick={() => handleOpenProjectModal()}>
@@ -373,9 +383,9 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <select 
-                        id="status" 
-                        {...register("status")} 
+                    <select
+                        id="status"
+                        {...register("status")}
                         className="w-full p-2 border rounded-md bg-background text-sm focus:ring-ring focus:border-input"
                     >
                       {(['Concept', 'Prototype', 'In Progress', 'Completed', 'Deployed', 'Archived'] as ProjectStatus[]).map(s => (
@@ -385,7 +395,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <Label htmlFor="progress">Progress (0-100, for 'In Progress')</Label>
-                    <Input id="progress" type="number" {...register("progress", {setValueAs: (v) => (v === '' || v === null ? null : Number(v))})} />
+                    <Input id="progress" type="number" {...register("progress", {setValueAs: (v) => (v === '' || v === null || v === undefined ? null : Number(v))})} />
                      {formErrors.progress && <p className="text-destructive text-sm mt-1">{formErrors.progress.message}</p>}
                   </div>
                   <DialogFooter>
@@ -447,5 +457,3 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
-
-
