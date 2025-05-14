@@ -1,7 +1,23 @@
-[build]
-  command = "npm run build"
-  publish = "out"
+# Netlify configuration file for Next.js project
 
-[build.environment]
-  SECRETS_SCAN_ENABLED = "false"  # Disable secrets scanning entirely
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"  # Exclude these keys
+[build]
+  # Command to build the project
+  command = "npm run build"
+
+  # Publish directory: for Next.js, use '.next' for SSR or SSG
+  publish = ".next"
+
+  # Optional environment variables
+  environment = [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SECRETS_SCAN_ENABLED",
+    "SECRETS_SCAN_OMIT_KEYS"
+  ]
+
+# Plugin for Next.js deployment
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+  # Optional plugin inputs if needed
+  inputs = {}
