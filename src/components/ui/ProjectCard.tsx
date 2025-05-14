@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import type { Project, ProjectStatus } from '@/data/portfolioData';
+import type { Project, ProjectStatus } from '@/types/supabase'; // Use Supabase type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -24,20 +24,21 @@ const statusConfig: Record<ProjectStatus, { icon: LucideIcon; label: string; bad
 
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const currentStatusConfig = statusConfig[project.status];
+  const currentStatusConfig = project.status ? statusConfig[project.status] : statusConfig['Concept']; // Default to Concept if status is null
   const isActionable = project.status === 'Deployed' || project.status === 'Completed';
 
   let liveDemoButton = null;
   if (project.liveDemoUrl) {
     if (isActionable) {
       liveDemoButton = (
-        <Button asChild variant="outline" className="flex-1">
+        <Button asChild variant="outline" className="flex-1 group/button hover:border-primary">
           <Link href={project.liveDemoUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+            <ExternalLink className="mr-2 h-4 w-4 group-hover/button:text-primary transition-colors" />
+            <span className="group-hover/button:text-primary transition-colors">Live Demo</span>
           </Link>
         </Button>
       );
-    } else { // Has URL, but not actionable (e.g., In Progress with demo link)
+    } else {
       liveDemoButton = (
         <TooltipProvider>
           <Tooltip>
@@ -47,13 +48,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Demo for project under development.</p>
+              <p>Demo for project under development or not available.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     }
-  } else { // No liveDemoUrl
+  } else {
     liveDemoButton = (
       <TooltipProvider>
         <Tooltip>
@@ -72,31 +73,32 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   let sourceCodeButton = null;
   if (project.repoUrl) {
-    if (isActionable) {
-      sourceCodeButton = (
-        <Button asChild variant="outline" className="flex-1">
-          <Link href={project.repoUrl} target="_blank" rel="noopener noreferrer">
-            <Github className="mr-2 h-4 w-4" /> Source Code
+     sourceCodeButton = ( // Always create button, but disable based on actionability
+        <Button asChild variant="outline" className="flex-1 group/button hover:border-primary" disabled={!isActionable}>
+          <Link href={isActionable ? project.repoUrl : '#'} target={isActionable ? "_blank" : undefined} rel={isActionable ? "noopener noreferrer" : undefined} aria-disabled={!isActionable}>
+            <Github className="mr-2 h-4 w-4 group-hover/button:text-primary transition-colors" />
+            <span className="group-hover/button:text-primary transition-colors">Source Code</span>
           </Link>
         </Button>
       );
-    } else { // Has repo URL, but not actionable
-      sourceCodeButton = (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" className="flex-1" disabled>
-                <Github className="mr-2 h-4 w-4" /> Source Code
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Source code may be private or project under development.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    }
-  } else { // No repoUrl
+      if (!isActionable) {
+        sourceCodeButton = (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {/* Render the disabled button structure here so Tooltip can attach */}
+                <Button variant="outline" className="flex-1" disabled>
+                    <Github className="mr-2 h-4 w-4" /> Source Code
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                 <p>Source code may be private or project under development.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      }
+  } else {
     sourceCodeButton = (
       <TooltipProvider>
         <Tooltip>
@@ -113,16 +115,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     );
   }
 
+
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg bg-card transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.015]">
       <div className="relative w-full h-48 md:h-56 group">
         <Image
-          src={project.imageUrl}
-          alt={project.title}
+          src={project.imageUrl || `https://placehold.co/600x400.png`}
+          alt={project.title || 'Project image'}
           layout="fill"
           objectFit="cover"
           className="transition-transform duration-300 group-hover:scale-105"
-          data-ai-hint={project.imageHint}
+          data-ai-hint={project.imageHint || 'project abstract'}
         />
       </div>
       <CardHeader>
@@ -139,7 +142,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       <CardContent className="flex-grow flex flex-col">
         <p className="text-sm text-muted-foreground mb-3 flex-grow">{project.description}</p>
         
-        {project.status === 'In Progress' && project.progress !== undefined && (
+        {project.status === 'In Progress' && project.progress !== null && project.progress !== undefined && (
           <div className="my-3">
             <Progress value={project.progress} className="h-2" aria-label={`${project.progress}% complete`} />
             <p className="text-xs text-muted-foreground mt-1 text-right">{project.progress}% complete</p>
@@ -153,11 +156,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         )}
 
 
-        <div className="flex flex-wrap gap-2 mb-3">
-          {project.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">{tag}</Badge>
-          ))}
-        </div>
+        {project.tags && project.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+            {project.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+            ))}
+            </div>
+        )}
       </CardContent>
       <CardFooter className="mt-auto pt-0">
         <div className="flex gap-2 w-full">
