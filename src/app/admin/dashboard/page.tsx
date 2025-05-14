@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,10 +24,22 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 
 const projectSchema = z.object({
@@ -45,11 +57,9 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-// This type is for the `currentProject` state used to populate the form.
-// It mirrors the `Project` interface but with tags as a string.
 type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at'> & {
-    tags: string; // Tags as a comma-separated string for the form input
-    created_at?: string; // Make created_at optional for new projects
+    tags: string; 
+    created_at?: string; 
 };
 
 
@@ -67,6 +77,10 @@ export default function AdminDashboardPage() {
   const [currentProject, setCurrentProject] = useState<CurrentProjectEditState | null>(null);
   const { toast } = useToast();
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
+
   const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -76,7 +90,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', // This should be a string now for the form
+        tags: '', 
         status: 'Concept',
         progress: null,
       }
@@ -102,7 +116,7 @@ export default function AdminDashboardPage() {
       setValue('image_hint', currentProject.imageHint || '');
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
-      setValue('tags', currentProject.tags); // currentProject.tags is already a string here
+      setValue('tags', currentProject.tags); 
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress === null || currentProject.progress === undefined ? null : Number(currentProject.progress));
     } else {
@@ -113,7 +127,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', // Reset to string for the form
+        tags: '', 
         status: 'Concept',
         progress: null,
       });
@@ -141,7 +155,7 @@ export default function AdminDashboardPage() {
         imageHint: p.image_hint,
         liveDemoUrl: p.live_demo_url,
         repoUrl: p.repo_url,
-        tags: p.tags, // Supabase returns array of strings for TEXT[]
+        tags: p.tags, 
         status: p.status as ProjectStatus,
         progress: p.progress,
         created_at: p.created_at,
@@ -194,7 +208,7 @@ export default function AdminDashboardPage() {
       image_hint: formData.image_hint || null,
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
-      tags: formData.tags, // Already an array from Zod transform
+      tags: formData.tags, 
       status: formData.status,
       progress: formData.status === 'In Progress' && formData.progress !== undefined && formData.progress !== null ? Number(formData.progress) : null,
     };
@@ -213,7 +227,7 @@ export default function AdminDashboardPage() {
     } else {
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(projectDataToSave as any);
+        .insert(projectDataToSave as any); 
       if (insertError) {
         console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
         toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
@@ -224,38 +238,38 @@ export default function AdminDashboardPage() {
     setIsProjectModalOpen(false);
     setCurrentProject(null);
     fetchProjects();
-    router.refresh();
+    router.refresh(); 
   };
 
-  const handleDeleteProject = async (projectId: string) => {
-    console.log(`[AdminDashboard] handleDeleteProject called for projectId: ${projectId}`); // Log 1
+  const triggerDeleteConfirmation = (project: Project) => {
+    setProjectToDelete(project);
+    setShowDeleteConfirm(true);
+  };
 
-    if (!confirm("Are you sure you want to delete this project?")) {
-        console.log("[AdminDashboard] Delete cancelled by user."); // Log 2
-        return;
-    }
-    console.log("[AdminDashboard] User confirmed delete. Proceeding with Supabase call..."); // Log 3
-
+  const performDeleteProject = async (projectId: string) => {
+    console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`); 
     const { error: deleteError } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId);
 
     if (deleteError) {
-      console.error("Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); // Log 4
+      console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); 
       toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
     } else {
-      console.log("[AdminDashboard] Project deleted successfully from Supabase."); // Log 5
+      console.log("[AdminDashboard] Project deleted successfully from Supabase."); 
       toast({ title: "Success", description: "Project deleted successfully." });
       fetchProjects();
       router.refresh();
     }
+    setProjectToDelete(null); // Clear the project to delete state
   };
+
 
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
         ...project,
-        tags: (project.tags || []).join(', '),
+        tags: (Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')),
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -329,7 +343,6 @@ export default function AdminDashboardPage() {
           <LogOut className="mr-2 h-4 w-4" /> Logout
         </Button>
       </div>
-
 
       {/* Projects Management Section */}
       <Card className="mb-8 shadow-lg">
@@ -425,7 +438,7 @@ export default function AdminDashboardPage() {
                         Status: <span className={`font-medium ${project.status === 'Deployed' ? 'text-green-600' : project.status === 'In Progress' ? 'text-blue-600' : 'text-gray-600'}`}>{project.status}</span>
                         {project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}
                         </p>
-                        {project.tags && project.tags.length > 0 && (
+                        {project.tags && (Array.isArray(project.tags) ? project.tags.length > 0 : (project.tags as string).length > 0) && (
                         <p className="text-xs text-muted-foreground mt-1">Tags: {(Array.isArray(project.tags) ? project.tags.join(', ') : project.tags)}</p>
                         )}
                     </div>
@@ -433,9 +446,11 @@ export default function AdminDashboardPage() {
                         <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}>
                         <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(project.id)}>
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
-                        </Button>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+                           </Button>
+                        </AlertDialogTrigger>
                     </div>
                     </Card>
                 ))}
@@ -445,7 +460,52 @@ export default function AdminDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder for other sections (Skills, About, Timeline, Certifications) */}
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-destructive border-destructive text-destructive-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive-foreground">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-destructive-foreground/90">
+              This action cannot be undone. This will permanently delete the
+              project "{projectToDelete?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setProjectToDelete(null);
+              }}
+              className={cn(
+                buttonVariants({ variant: "outline" }), 
+                "border-destructive-foreground/40 text-destructive-foreground",
+                "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60" 
+              )}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (projectToDelete) {
+                  performDeleteProject(projectToDelete.id);
+                }
+                setShowDeleteConfirm(false);
+                setProjectToDelete(null);
+              }}
+              className={cn(
+                buttonVariants({ variant: "default" }), 
+                "bg-destructive-foreground text-destructive",
+                "hover:bg-destructive-foreground/90"
+              )}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+      {/* Placeholder for other sections */}
       <Card className="mb-8 shadow-lg">
         <CardHeader><CardTitle>Manage Skills (Coming Soon)</CardTitle></CardHeader>
         <CardContent><p className="text-muted-foreground">Functionality to add, edit, and delete skills categories and individual skills will be here.</p></CardContent>
@@ -454,11 +514,8 @@ export default function AdminDashboardPage() {
         <CardHeader><CardTitle>Manage About Content (Coming Soon)</CardTitle></CardHeader>
         <CardContent><p className="text-muted-foreground">Functionality to edit the About Me section content.</p></CardContent>
       </Card>
-       {/* Add similar placeholders for Timeline and Certifications */}
-
     </SectionWrapper>
   );
 }
-
-
+        
     
