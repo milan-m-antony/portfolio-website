@@ -23,7 +23,7 @@ export interface Database {
           title: string
           description: string | null
           image_url: string | null
-          image_hint: string | null
+          // image_hint: string | null // Removed
           live_demo_url: string | null
           repo_url: string | null
           tags: string[] | null
@@ -36,7 +36,7 @@ export interface Database {
           title: string
           description?: string | null
           image_url?: string | null
-          image_hint?: string | null
+          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -49,7 +49,7 @@ export interface Database {
           title?: string
           description?: string | null
           image_url?: string | null
-          image_hint?: string | null
+          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -125,9 +125,9 @@ export interface Database {
           id: string
           title: string
           issuer: string
-          date: string // Consider DATE type if appropriate
+          date: string 
           image_url: string | null
-          image_hint: string | null
+          image_hint: string | null 
           verify_url: string | null
           created_at: string
         }
@@ -153,14 +153,14 @@ export interface Database {
         }
         Relationships: []
       }
-      timeline_events: { // Added timeline_events table
+      timeline_events: { 
         Row: {
           id: string
           date: string
           title: string
           description: string
           icon_name: string 
-          type: string // 'work' | 'education' | 'certification' | 'milestone'
+          type: string 
           sort_order: number | null
           created_at: string
         }
@@ -209,7 +209,7 @@ export interface Project {
   title: string;
   description: string | null;
   imageUrl: string | null; 
-  imageHint: string | null;
+  // imageHint: string | null; // Removed
   liveDemoUrl?: string | null;
   repoUrl?: string | null;
   tags: string[] | null;
@@ -242,7 +242,7 @@ export interface TimelineEvent {
   date: string;
   title: string;
   description: string;
-  iconName: string; // Maps to Lucide icon names
+  iconName: string; 
   type: TimelineEventType;
   sort_order?: number | null;
 }

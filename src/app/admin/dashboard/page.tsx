@@ -33,7 +33,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  // AlertDialogTrigger, // No longer needed here if button manually sets state
 } from "@/components/ui/alert-dialog";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,7 +46,6 @@ const projectSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  image_hint: z.string().optional(),
   live_demo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   repo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)),
@@ -62,7 +60,6 @@ type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at' | 'imageUrl' 
     imageUrl?: string | null;
     liveDemoUrl?: string | null;
     repoUrl?: string | null;
-    imageHint?: string | null;
     created_at?: string;
 };
 
@@ -91,7 +88,6 @@ export default function AdminDashboardPage() {
         title: '',
         description: '',
         image_url: '',
-        image_hint: '',
         live_demo_url: '',
         repo_url: '',
         tags: '',
@@ -117,7 +113,6 @@ export default function AdminDashboardPage() {
       setValue('title', currentProject.title);
       setValue('description', currentProject.description || '');
       setValue('image_url', currentProject.imageUrl || '');
-      setValue('image_hint', currentProject.imageHint || '');
       setValue('live_demo_url', currentProject.liveDemoUrl || '');
       setValue('repo_url', currentProject.repoUrl || '');
       setValue('tags', currentProject.tags);
@@ -128,7 +123,6 @@ export default function AdminDashboardPage() {
         title: '',
         description: '',
         image_url: '',
-        image_hint: '',
         live_demo_url: '',
         repo_url: '',
         tags: '',
@@ -155,10 +149,10 @@ export default function AdminDashboardPage() {
         id: p.id,
         title: p.title,
         description: p.description,
-        imageUrl: p.image_url,
-        imageHint: p.image_hint,
-        liveDemoUrl: p.live_demo_url,
-        repoUrl: p.repo_url,
+        imageUrl: p.image_url, // Map snake_case to camelCase
+        // imageHint: p.image_hint, // Removed imageHint
+        liveDemoUrl: p.live_demo_url, // Map snake_case to camelCase
+        repoUrl: p.repo_url, // Map snake_case to camelCase
         tags: p.tags,
         status: p.status as ProjectStatus,
         progress: p.progress,
@@ -209,7 +203,7 @@ export default function AdminDashboardPage() {
       title: formData.title,
       description: formData.description,
       image_url: formData.image_url || null,
-      image_hint: formData.image_hint || null,
+      // image_hint removed
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
       tags: formData.tags,
@@ -253,7 +247,6 @@ export default function AdminDashboardPage() {
 
   const performDeleteProject = async (projectId: string) => {
     console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`);
-    // Log 3 from previous debugging
     if (!projectToDelete || projectToDelete.id !== projectId) {
         console.error("[AdminDashboard] Mismatch or missing projectToDelete state for ID:", projectId);
         toast({ title: "Error", description: "Could not delete project due to an internal state error.", variant: "destructive"});
@@ -269,23 +262,24 @@ export default function AdminDashboardPage() {
       .eq('id', projectId);
 
     if (deleteError) {
-      console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); // Log 4 from previous debugging
+      console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2));
       toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
     } else {
       console.log("[AdminDashboard] Project deleted successfully from Supabase.");
       toast({ title: "Success", description: "Project deleted successfully." });
-      fetchProjects(); // Re-fetch projects to update the list
+      fetchProjects();
       router.refresh();
     }
-    setShowDeleteConfirm(false); // Close modal after operation
-    setProjectToDelete(null); // Clear the project to delete state
+    setShowDeleteConfirm(false);
+    setProjectToDelete(null);
   };
 
 
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
-        ...project, // Spread all original Project properties
+        ...project,
         tags: (Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')),
+        // imageHint removed
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -394,10 +388,7 @@ export default function AdminDashboardPage() {
                     <Input id="image_url" {...register("image_url")} placeholder="https://example.com/image.png" />
                      {formErrors.image_url && <p className="text-destructive text-sm mt-1">{formErrors.image_url.message}</p>}
                   </div>
-                  <div>
-                    <Label htmlFor="image_hint">Image Hint (for AI placeholders)</Label>
-                    <Input id="image_hint" {...register("image_hint")} placeholder="e.g. online store, tech gear" />
-                  </div>
+                  {/* Image Hint field removed */}
                   <div>
                     <Label htmlFor="live_demo_url">Live Demo URL</Label>
                     <Input id="live_demo_url" {...register("live_demo_url")} placeholder="https://example.com/demo" />
@@ -462,7 +453,6 @@ export default function AdminDashboardPage() {
                         <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}>
                         <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
                         </Button>
-                        {/* Removed AlertDialogTrigger wrapper, button onClick now directly triggers confirmation */}
                         <Button variant="destructive" size="sm" onClick={() => triggerDeleteConfirmation(project)}>
                             <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
                         </Button>
@@ -504,8 +494,6 @@ export default function AdminDashboardPage() {
                 if (projectToDelete) {
                   performDeleteProject(projectToDelete.id);
                 }
-                // setShowDeleteConfirm(false); // Already handled in performDeleteProject or its callback
-                // setProjectToDelete(null); // Already handled in performDeleteProject or its callback
               }}
               className={cn(
                 buttonVariants({ variant: "default" }),

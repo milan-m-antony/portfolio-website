@@ -72,7 +72,7 @@ const projectActionSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   image_url: z.string().url().optional().or(z.literal('')),
-  image_hint: z.string().optional(),
+  // image_hint: z.string().optional(), // Removed
   live_demo_url: z.string().url().optional().or(z.literal('')),
   repo_url: z.string().url().optional().or(z.literal('')),
   tags: z.array(z.string()).optional(),
