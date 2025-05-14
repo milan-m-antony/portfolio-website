@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import React, { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import SectionTitle from '@/components/ui/SectionTitle';
@@ -40,7 +40,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -124,6 +123,9 @@ export default function AdminDashboardPage() {
   const [parentCategoryIdForNewSkill, setParentCategoryIdForNewSkill] = useState<string | null>(null);
   const [showSkillDeleteConfirm, setShowSkillDeleteConfirm] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<SkillType | null>(null);
+
+  const [categoryIconPreview, setCategoryIconPreview] = useState<React.ElementType | null>(null);
+  const [skillIconPreview, setSkillIconPreview] = useState<React.ElementType | null>(null);
 
 
   const projectForm = useForm<ProjectFormData>({
@@ -209,6 +211,36 @@ export default function AdminDashboardPage() {
     }
   }, [currentSkill, parentCategoryIdForNewSkill, skillForm]);
 
+  const watchedCategoryIconNameFromForm = categoryForm.watch('icon_name');
+  const watchedSkillIconNameFromForm = skillForm.watch('icon_name');
+
+  useEffect(() => {
+    if (watchedCategoryIconNameFromForm && typeof watchedCategoryIconNameFromForm === 'string' && watchedCategoryIconNameFromForm.trim() !== '') {
+      const Icon = LucideIcons[watchedCategoryIconNameFromForm as keyof typeof LucideIcons] as React.ElementType | undefined;
+      if (Icon && typeof Icon === 'function') {
+        setCategoryIconPreview(() => Icon);
+      } else {
+        setCategoryIconPreview(null);
+      }
+    } else {
+      setCategoryIconPreview(null);
+    }
+  }, [watchedCategoryIconNameFromForm]);
+
+  useEffect(() => {
+    if (watchedSkillIconNameFromForm && typeof watchedSkillIconNameFromForm === 'string' && watchedSkillIconNameFromForm.trim() !== '') {
+      const Icon = LucideIcons[watchedSkillIconNameFromForm as keyof typeof LucideIcons] as React.ElementType | undefined;
+      if (Icon && typeof Icon === 'function') {
+        setSkillIconPreview(() => Icon);
+      } else {
+        setSkillIconPreview(null);
+      }
+    } else {
+      setSkillIconPreview(null);
+    }
+  }, [watchedSkillIconNameFromForm]);
+
+
   const fetchProjects = async () => {
     setIsLoadingProjects(true);
     const { data, error: fetchError } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
@@ -218,9 +250,16 @@ export default function AdminDashboardPage() {
       setProjects([]);
     } else if (data) {
        const mappedProjects: Project[] = data.map(p => ({
-        id: p.id, title: p.title, description: p.description,
-        imageUrl: p.image_url, liveDemoUrl: p.live_demo_url, repoUrl: p.repo_url,
-        tags: p.tags, status: p.status as ProjectStatus, progress: p.progress, created_at: p.created_at,
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        imageUrl: p.image_url, // Map snake_case to camelCase
+        liveDemoUrl: p.live_demo_url, // Map snake_case to camelCase
+        repoUrl: p.repo_url, // Map snake_case to camelCase
+        tags: p.tags,
+        status: p.status as ProjectStatus,
+        progress: p.progress,
+        created_at: p.created_at,
       }));
       setProjects(mappedProjects);
     } else { setProjects([]); }
@@ -351,7 +390,6 @@ export default function AdminDashboardPage() {
 };
 
 const triggerDeleteConfirmation = (project: Project) => {
-    console.log("[AdminDashboard] triggerDeleteConfirmation called for project:", project.title);
     setProjectToDelete(project);
     setShowProjectDeleteConfirm(true);
 };
@@ -619,7 +657,16 @@ const triggerDeleteConfirmation = (project: Project) => {
           <DialogHeader><DialogTitle>{currentCategory?.id ? 'Edit Skill Category' : 'Add New Skill Category'}</DialogTitle></DialogHeader>
           <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="grid gap-4 py-4">
             <div><Label htmlFor="categoryName">Name</Label><Input id="categoryName" {...categoryForm.register("name")} />{categoryForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{categoryForm.formState.errors.name.message}</p>}</div>
-            <div><Label htmlFor="categoryIconName">Icon Name (Lucide)</Label><Input id="categoryIconName" {...categoryForm.register("icon_name")} placeholder="e.g., Laptop, Braces" /></div>
+            <div>
+              <Label htmlFor="categoryIconName">Icon Name (Lucide)</Label>
+              <Input id="categoryIconName" {...categoryForm.register("icon_name")} placeholder="e.g., Laptop, Braces" />
+              {categoryIconPreview && (
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Preview:</p>
+                  {React.createElement(categoryIconPreview, { className: "h-6 w-6 text-primary" })}
+                </div>
+              )}
+            </div>
             <div><Label htmlFor="categorySortOrder">Sort Order</Label><Input id="categorySortOrder" type="number" {...categoryForm.register("sort_order")} /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentCategory?.id ? 'Save Changes' : 'Add Category'}</Button></DialogFooter>
           </form>
@@ -634,10 +681,18 @@ const triggerDeleteConfirmation = (project: Project) => {
         <DialogContent>
           <DialogHeader><DialogTitle>{currentSkill?.id ? 'Edit Skill' : 'Add New Skill'}</DialogTitle></DialogHeader>
           <form onSubmit={skillForm.handleSubmit(onSkillSubmit)} className="grid gap-4 py-4">
-            {/* Hidden input for category_id, set when opening modal */}
             <input type="hidden" {...skillForm.register("category_id")} />
             <div><Label htmlFor="skillName">Skill Name</Label><Input id="skillName" {...skillForm.register("name")} />{skillForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{skillForm.formState.errors.name.message}</p>}</div>
-            <div><Label htmlFor="skillIconName">Icon Name (Lucide)</Label><Input id="skillIconName" {...skillForm.register("icon_name")} placeholder="e.g., SquareCode, Orbit"/></div>
+            <div>
+              <Label htmlFor="skillIconName">Icon Name (Lucide)</Label>
+              <Input id="skillIconName" {...skillForm.register("icon_name")} placeholder="e.g., SquareCode, Orbit"/>
+              {skillIconPreview && (
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Preview:</p>
+                  {React.createElement(skillIconPreview, { className: "h-6 w-6 text-primary" })}
+                </div>
+              )}
+            </div>
             <div><Label htmlFor="skillDescription">Description (Optional)</Label><Textarea id="skillDescription" {...skillForm.register("description")} /></div>
             <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentSkill?.id ? 'Save Changes' : 'Add Skill'}</Button></DialogFooter>
           </form>
