@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import type { Project } from '@/types/supabase'; // Use Project type from Supabase
+import type { Project, ProjectStatus } from '@/types/supabase'; // Use Project type from Supabase
 import {
   Dialog,
   DialogContent,
@@ -27,11 +27,11 @@ import {
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 
 const projectSchema = z.object({
-  id: z.string().optional(), // UUID, optional for new projects
+  id: z.string().uuid().optional(), // UUID, optional for new projects
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -40,7 +40,7 @@ const projectSchema = z.object({
   repo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)), // Comma-separated to array
   status: z.enum(['Deployed', 'In Progress', 'Prototype', 'Archived', 'Concept', 'Completed']),
-  progress: z.coerce.number().min(0).max(100).optional(),
+  progress: z.coerce.number().min(0).max(100).optional().nullable(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -58,9 +58,21 @@ export default function AdminDashboardPage() {
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<ProjectFormData | null>(null);
+  const { toast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
+    defaultValues: {
+        title: '',
+        description: '',
+        image_url: '',
+        image_hint: '',
+        live_demo_url: '',
+        repo_url: '',
+        tags: '',
+        status: 'Concept',
+        progress: null,
+      }
   });
 
   useEffect(() => {
@@ -85,7 +97,7 @@ export default function AdminDashboardPage() {
       setValue('repo_url', currentProject.repo_url || '');
       setValue('tags', (currentProject.tags || []).join(', '));
       setValue('status', currentProject.status || 'Concept');
-      setValue('progress', currentProject.progress || 0);
+      setValue('progress', currentProject.progress || null);
     } else {
       reset({
         title: '',
@@ -96,7 +108,7 @@ export default function AdminDashboardPage() {
         repo_url: '',
         tags: '',
         status: 'Concept',
-        progress: 0,
+        progress: null,
       });
     }
   }, [currentProject, setValue, reset]);
@@ -110,8 +122,8 @@ export default function AdminDashboardPage() {
       .order('created_at', { ascending: false });
 
     if (fetchError) {
-      console.error('Error fetching projects:', fetchError);
-      toast({ title: "Error", description: "Could not fetch projects.", variant: "destructive" });
+      console.error('Error fetching projects:', JSON.stringify(fetchError, null, 2));
+      toast({ title: "Error", description: `Could not fetch projects: ${fetchError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       setProjects([]);
     } else {
       setProjects(data as Project[]);
@@ -148,15 +160,16 @@ export default function AdminDashboardPage() {
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
-    const projectDataToSave = {
+    const projectDataToSave: Omit<ProjectFormData, 'id'> & { id?: string; progress: number | null; tags: string[] } = {
       ...formData,
-      // Ensure optional fields that are empty strings are set to null for Supabase
       image_url: formData.image_url || null,
       image_hint: formData.image_hint || null,
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
-      progress: formData.status === 'In Progress' ? formData.progress : null,
+      progress: formData.status === 'In Progress' && formData.progress !== undefined ? Number(formData.progress) : null,
+      tags: Array.isArray(formData.tags) ? formData.tags : (formData.tags as unknown as string).split(',').map(tag => tag.trim()).filter(Boolean),
     };
+    
 
     if (currentProject?.id) { // Update existing project
       const { error: updateError } = await supabase
@@ -164,27 +177,27 @@ export default function AdminDashboardPage() {
         .update(projectDataToSave)
         .eq('id', currentProject.id);
       if (updateError) {
-        console.error("Error updating project:", updateError);
-        toast({ title: "Error", description: `Failed to update project: ${updateError.message}`, variant: "destructive" });
+        console.error("Error updating project (raw Supabase error object):", JSON.stringify(updateError, null, 2));
+        toast({ title: "Error", description: `Failed to update project: ${updateError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       } else {
         toast({ title: "Success", description: "Project updated successfully." });
       }
     } else { // Create new project
-      const { id, ...dataToInsert } = projectDataToSave; // remove id if it's undefined
+      const { id, ...dataToInsert } = projectDataToSave; 
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(dataToInsert);
+        .insert(dataToInsert as any); // Using 'as any' temporarily if type mismatches are complex, ensure dataToInsert matches Supabase schema
       if (insertError) {
-        console.error("Error adding project:", insertError);
-        toast({ title: "Error", description: `Failed to add project: ${insertError.message}`, variant: "destructive" });
+        console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
+        toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       } else {
         toast({ title: "Success", description: "Project added successfully." });
       }
     }
     setIsProjectModalOpen(false);
     setCurrentProject(null);
-    fetchProjects(); // Refresh project list
-    router.refresh(); // To re-fetch server components if project list is displayed elsewhere
+    fetchProjects(); 
+    router.refresh(); 
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -195,8 +208,8 @@ export default function AdminDashboardPage() {
       .eq('id', projectId);
 
     if (deleteError) {
-      console.error("Error deleting project:", deleteError);
-      toast({ title: "Error", description: `Failed to delete project: ${deleteError.message}`, variant: "destructive" });
+      console.error("Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2));
+      toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
     } else {
       toast({ title: "Success", description: "Project deleted successfully." });
       fetchProjects();
@@ -207,10 +220,17 @@ export default function AdminDashboardPage() {
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
         ...project,
-        image_url: project.imageUrl || '', // map back from component prop
-        live_demo_url: project.liveDemoUrl || '',
-        repo_url: project.repoUrl || '',
-        tags: (project.tags || []).join(', ') // Convert array back to comma-separated string for form
+        // Ensure these fields from Project (DB row) are correctly mapped to ProjectFormData
+        id: project.id,
+        title: project.title,
+        description: project.description || '',
+        image_url: project.image_url || '', 
+        image_hint: project.image_hint || '',
+        live_demo_url: project.live_demo_url || '',
+        repo_url: project.repo_url || '',
+        tags: (project.tags || []).join(', '), 
+        status: project.status as ProjectStatus || 'Concept',
+        progress: project.progress !== undefined ? project.progress : null,
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -269,21 +289,25 @@ export default function AdminDashboardPage() {
   return (
     <SectionWrapper>
       <SectionTitle subtitle="Manage portfolio content.">Admin Dashboard</SectionTitle>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-6">
+        <Button asChild className="mb-0">
+            <Link href="/">Back to Portfolio</Link>
+        </Button>
         <Button variant="outline" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" /> Logout
         </Button>
       </div>
-      <Button asChild className="mb-4">
-          <Link href="/">Back to Portfolio</Link>
-      </Button>
+      
 
       {/* Projects Management Section */}
       <Card className="mb-8 shadow-lg">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             Manage Projects
-            <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+            <Dialog open={isProjectModalOpen} onOpenChange={(isOpen) => {
+                setIsProjectModalOpen(isOpen);
+                if (!isOpen) setCurrentProject(null); // Reset currentProject when dialog closes
+             }}>
               <DialogTrigger asChild>
                 <Button onClick={() => handleOpenProjectModal()}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Project
@@ -293,8 +317,7 @@ export default function AdminDashboardPage() {
                 <DialogHeader>
                   <DialogTitle>{currentProject?.id ? 'Edit Project' : 'Add New Project'}</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit(onProjectSubmit)} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto p-2">
-                  {/* Form fields */}
+                <form onSubmit={handleSubmit(onProjectSubmit)} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto p-2 scrollbar-hide">
                   <div>
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" {...register("title")} />
@@ -311,8 +334,8 @@ export default function AdminDashboardPage() {
                      {formErrors.image_url && <p className="text-destructive text-sm mt-1">{formErrors.image_url.message}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="image_hint">Image Hint (for AI)</Label>
-                    <Input id="image_hint" {...register("image_hint")} placeholder="e.g. online store" />
+                    <Label htmlFor="image_hint">Image Hint (for AI placeholders)</Label>
+                    <Input id="image_hint" {...register("image_hint")} placeholder="e.g. online store, tech gear" />
                   </div>
                   <div>
                     <Label htmlFor="live_demo_url">Live Demo URL</Label>
@@ -330,15 +353,20 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <select id="status" {...register("status")} className="w-full p-2 border rounded-md bg-background">
-                      {['Concept', 'Prototype', 'In Progress', 'Completed', 'Deployed', 'Archived'].map(s => (
+                    <select 
+                        id="status" 
+                        {...register("status")} 
+                        className="w-full p-2 border rounded-md bg-background text-sm focus:ring-ring focus:border-input"
+                    >
+                      {(['Concept', 'Prototype', 'In Progress', 'Completed', 'Deployed', 'Archived'] as ProjectStatus[]).map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
                   </div>
                   <div>
                     <Label htmlFor="progress">Progress (0-100, for 'In Progress')</Label>
-                    <Input id="progress" type="number" {...register("progress")} />
+                    <Input id="progress" type="number" {...register("progress", { valueAsNumber: true })} />
+                     {formErrors.progress && <p className="text-destructive text-sm mt-1">{formErrors.progress.message}</p>}
                   </div>
                   <DialogFooter>
                     <DialogClose asChild>
@@ -352,26 +380,35 @@ export default function AdminDashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoadingProjects ? <p>Loading projects...</p> : (
-            <div className="space-y-4">
-              {projects.map((project) => (
-                <Card key={project.id} className="flex justify-between items-center p-4">
-                  <div>
-                    <h4 className="font-semibold">{project.title}</h4>
-                    <p className="text-sm text-muted-foreground">{project.status} - {project.tags?.join(', ')}</p>
-                  </div>
-                  <div className="space-x-2">
-                    <Button variant="outline" size="icon" onClick={() => handleOpenProjectModal(project)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteProject(project.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-              {projects.length === 0 && <p>No projects found. Add one!</p>}
-            </div>
+          {isLoadingProjects ? <p className="text-center text-muted-foreground">Loading projects...</p> : (
+            projects.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No projects found. Add one to get started!</p>
+            ) : (
+                <div className="space-y-4">
+                {projects.map((project) => (
+                    <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
+                    <div className="flex-grow mb-3 sm:mb-0">
+                        <h4 className="font-semibold text-lg">{project.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                        Status: <span className={`font-medium ${project.status === 'Deployed' ? 'text-green-600' : project.status === 'In Progress' ? 'text-blue-600' : 'text-gray-600'}`}>{project.status}</span>
+                        {project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}
+                        </p>
+                        {project.tags && project.tags.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">Tags: {project.tags.join(', ')}</p>
+                        )}
+                    </div>
+                    <div className="flex space-x-2 self-start sm:self-center shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}>
+                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteProject(project.id)}>
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+                        </Button>
+                    </div>
+                    </Card>
+                ))}
+                </div>
+            )
           )}
         </CardContent>
       </Card>
@@ -391,3 +428,5 @@ export default function AdminDashboardPage() {
   );
 }
 
+
+    
