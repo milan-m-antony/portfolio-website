@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '',
+        tags: '', // This should be a string now for the form
         status: 'Concept',
         progress: null,
       }
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '',
+        tags: '', // Reset to string for the form
         status: 'Concept',
         progress: null,
       });
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
     setIsLoadingProjects(true);
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select('*') // Fetches all columns with their DB names (e.g., image_url)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (fetchError) {
@@ -133,18 +133,17 @@ export default function AdminDashboardPage() {
       toast({ title: "Error", description: `Could not fetch projects: ${fetchError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
       setProjects([]);
     } else if (data) {
-      // Explicitly map Supabase row data to the Project interface
-      const mappedProjects = data.map(p => ({
+      const mappedProjects: Project[] = data.map(p => ({
         id: p.id,
         title: p.title,
         description: p.description,
-        imageUrl: p.image_url,       // Map snake_case to camelCase
-        imageHint: p.image_hint,     // Map snake_case to camelCase
-        liveDemoUrl: p.live_demo_url,// Map snake_case to camelCase
-        repoUrl: p.repo_url,         // Map snake_case to camelCase
-        tags: p.tags,                // Assumes tags is string[] | null from DB
-        status: p.status as ProjectStatus, // Cast or validate status
-        progress: p.progress,        // Map snake_case to camelCase
+        imageUrl: p.image_url,
+        imageHint: p.image_hint,
+        liveDemoUrl: p.live_demo_url,
+        repoUrl: p.repo_url,
+        tags: p.tags, // Supabase returns array of strings for TEXT[]
+        status: p.status as ProjectStatus,
+        progress: p.progress,
         created_at: p.created_at,
       }));
       setProjects(mappedProjects);
@@ -188,12 +187,10 @@ export default function AdminDashboardPage() {
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
-    // formData uses Zod schema names (e.g., image_url)
-    // Map to Supabase column names if they differ or camelCase for internal logic
     const projectDataToSave = {
       title: formData.title,
       description: formData.description,
-      image_url: formData.image_url || null, // Ensure null if empty for DB
+      image_url: formData.image_url || null,
       image_hint: formData.image_hint || null,
       live_demo_url: formData.live_demo_url || null,
       repo_url: formData.repo_url || null,
@@ -203,7 +200,6 @@ export default function AdminDashboardPage() {
     };
 
     if (currentProject?.id) {
-      // Update existing project
       const { error: updateError } = await supabase
         .from('projects')
         .update(projectDataToSave)
@@ -215,10 +211,9 @@ export default function AdminDashboardPage() {
         toast({ title: "Success", description: "Project updated successfully." });
       }
     } else {
-      // Add new project
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(projectDataToSave as any); // Use 'as any' if types are slightly off for insert vs update
+        .insert(projectDataToSave as any);
       if (insertError) {
         console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
         toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
@@ -233,16 +228,24 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
+    console.log(`[AdminDashboard] handleDeleteProject called for projectId: ${projectId}`); // Log 1
+
+    if (!confirm("Are you sure you want to delete this project?")) {
+        console.log("[AdminDashboard] Delete cancelled by user."); // Log 2
+        return;
+    }
+    console.log("[AdminDashboard] User confirmed delete. Proceeding with Supabase call..."); // Log 3
+
     const { error: deleteError } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId);
 
     if (deleteError) {
-      console.error("Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2));
+      console.error("Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); // Log 4
       toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
     } else {
+      console.log("[AdminDashboard] Project deleted successfully from Supabase."); // Log 5
       toast({ title: "Success", description: "Project deleted successfully." });
       fetchProjects();
       router.refresh();
@@ -250,10 +253,9 @@ export default function AdminDashboardPage() {
   };
 
   const handleOpenProjectModal = (project?: Project) => {
-    // project object here comes from the 'projects' state, which should now be correctly mapped
     setCurrentProject(project ? {
-        ...project, // Spread the correctly mapped project
-        tags: (project.tags || []).join(', '), // Convert tags array to string for form
+        ...project,
+        tags: (project.tags || []).join(', '),
     } : null);
     setIsProjectModalOpen(true);
   };
@@ -302,7 +304,7 @@ export default function AdminDashboardPage() {
                 <LogIn className="mr-2 h-5 w-5" /> Sign In
               </Button>
             </form>
-            <div className="mt-6 text-center">
+             <div className="mt-6 text-center">
                 <Button variant="link" asChild>
                     <Link href="/">
                         <Home className="mr-2 h-4 w-4" /> Back to Portfolio
@@ -424,7 +426,7 @@ export default function AdminDashboardPage() {
                         {project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}
                         </p>
                         {project.tags && project.tags.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">Tags: {project.tags.join(', ')}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Tags: {(Array.isArray(project.tags) ? project.tags.join(', ') : project.tags)}</p>
                         )}
                     </div>
                     <div className="flex space-x-2 self-start sm:self-center shrink-0">
@@ -457,3 +459,6 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
+
+
+    
