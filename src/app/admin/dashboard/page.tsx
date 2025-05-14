@@ -75,7 +75,7 @@ type CurrentProjectEditState = Omit<Project, 'tags' | 'created_at' | 'imageUrl' 
 const skillCategorySchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(2, "Category name must be at least 2 characters"),
-  icon_image_url: z.string().url("Must be a valid URL if provided, or will be set by upload.").optional().or(z.literal("")), // Changed from icon_name
+  icon_image_url: z.string().url("Must be a valid URL if provided, or will be set by upload.").optional().or(z.literal("")),
   sort_order: z.coerce.number().optional().nullable(),
 });
 type SkillCategoryFormData = z.infer<typeof skillCategorySchema>;
@@ -84,15 +84,14 @@ const skillSchema = z.object({
   id: z.string().uuid().optional(),
   category_id: z.string().uuid("Category ID is required"),
   name: z.string().min(2, "Skill name must be at least 2 characters"),
-  icon_name: z.string().optional().nullable(), // Skills still use Lucide icon names
+  icon_image_url: z.string().url("Must be a valid URL if provided, or will be set by upload.").optional().or(z.literal("")), // Changed from icon_name
   description: z.string().optional().nullable(),
 });
 type SkillFormData = z.infer<typeof skillSchema>;
 
-// Type for skill category state, including its icon image URL
 type SkillCategoryAdminState = Omit<SkillCategory, 'iconImageUrl'> & {
   iconImageUrl?: string | null;
-  skills: SkillType[]; // Ensure skills are part of this type for admin display
+  skills: SkillType[];
 };
 
 
@@ -120,19 +119,19 @@ export default function AdminDashboardPage() {
   const [skillCategories, setSkillCategories] = useState<SkillCategoryAdminState[]>([]);
   const [isLoadingSkills, setIsLoadingSkills] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<SkillCategoryFormData & { id?: string } | null>(null); // Ensure id is optional for new
+  const [currentCategory, setCurrentCategory] = useState<SkillCategoryFormData & { id?: string } | null>(null);
   const [showCategoryDeleteConfirm, setShowCategoryDeleteConfirm] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<SkillCategoryAdminState | null>(null);
-
   const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
   const [categoryIconPreview, setCategoryIconPreview] = useState<string | null>(null);
 
-
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
-  const [currentSkill, setCurrentSkill] = useState<SkillFormData | null>(null);
+  const [currentSkill, setCurrentSkill] = useState<(SkillFormData & {id?: string}) | null>(null);
   const [parentCategoryIdForNewSkill, setParentCategoryIdForNewSkill] = useState<string | null>(null);
   const [showSkillDeleteConfirm, setShowSkillDeleteConfirm] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<SkillType | null>(null);
+  const [skillIconFile, setSkillIconFile] = useState<File | null>(null);
+  const [skillIconPreview, setSkillIconPreview] = useState<string | null>(null);
 
 
   const projectForm = useForm<ProjectFormData>({
@@ -149,7 +148,7 @@ export default function AdminDashboardPage() {
 
   const skillForm = useForm<SkillFormData>({
     resolver: zodResolver(skillSchema),
-    defaultValues: { category_id: '', name: '', icon_name: '', description: '' }
+    defaultValues: { category_id: '', name: '', icon_image_url: '', description: '' }
   });
 
 
@@ -190,6 +189,18 @@ export default function AdminDashboardPage() {
         setCategoryIconPreview(null);
     }
   }, [categoryIconFile, currentCategory]);
+
+  useEffect(() => {
+    if (skillIconFile) {
+        const reader = new FileReader();
+        reader.onloadend = () => setSkillIconPreview(reader.result as string);
+        reader.readAsDataURL(skillIconFile);
+    } else if (currentSkill?.icon_image_url) {
+        setSkillIconPreview(currentSkill.icon_image_url);
+    } else {
+        setSkillIconPreview(null);
+    }
+  }, [skillIconFile, currentSkill]);
 
 
   useEffect(() => {
@@ -233,9 +244,19 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (currentSkill) {
-      skillForm.reset(currentSkill);
+      skillForm.reset({
+        id: currentSkill.id,
+        category_id: currentSkill.category_id || parentCategoryIdForNewSkill || '',
+        name: currentSkill.name,
+        icon_image_url: currentSkill.icon_image_url || '',
+        description: currentSkill.description || '',
+      });
+      setSkillIconFile(null);
+      setSkillIconPreview(currentSkill.icon_image_url || null);
     } else {
-      skillForm.reset({ category_id: parentCategoryIdForNewSkill || '', name: '', icon_name: '', description: ''});
+      skillForm.reset({ category_id: parentCategoryIdForNewSkill || '', name: '', icon_image_url: '', description: ''});
+      setSkillIconFile(null);
+      setSkillIconPreview(null);
     }
   }, [currentSkill, parentCategoryIdForNewSkill, skillForm]);
 
@@ -255,8 +276,8 @@ export default function AdminDashboardPage() {
         imageUrl: p.image_url,
         liveDemoUrl: p.live_demo_url,
         repoUrl: p.repo_url,
-        tags: p.tags, // Assuming tags is already string[] or null from DB
-        status: p.status as ProjectStatus, // Assuming status is correctly typed string
+        tags: p.tags,
+        status: p.status as ProjectStatus,
         progress: p.progress,
         created_at: p.created_at,
       }));
@@ -269,7 +290,7 @@ export default function AdminDashboardPage() {
     setIsLoadingSkills(true);
     const { data, error: fetchError } = await supabase
       .from('skill_categories')
-      .select('*, skills (*)') // skills refers to the related table
+      .select('*, skills (*)')
       .order('sort_order', { ascending: true })
       .order('created_at', { foreignTable: 'skills', ascending: true });
 
@@ -281,12 +302,12 @@ export default function AdminDashboardPage() {
       const mappedCategories: SkillCategoryAdminState[] = data.map(cat => ({
         id: cat.id,
         name: cat.name,
-        iconImageUrl: cat.icon_image_url, // Map from new column
+        iconImageUrl: cat.icon_image_url,
         sort_order: cat.sort_order,
         skills: (cat.skills || []).map((sk: any) => ({
             id: sk.id,
             name: sk.name,
-            iconName: sk.icon_name, // Skills still use Lucide icon names
+            iconImageUrl: sk.icon_image_url, // Map from new column
             description: sk.description,
             categoryId: sk.category_id
         })) as SkillType[],
@@ -321,24 +342,39 @@ export default function AdminDashboardPage() {
   const handleProjectImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0]; setProjectImageFile(file);
-      projectForm.setValue('image_url', ''); 
+      projectForm.setValue('image_url', '');
     } else {
       setProjectImageFile(null);
       if (currentProject?.imageUrl) setProjectImagePreview(currentProject.imageUrl); else setProjectImagePreview(null);
     }
   };
-  
+
   const handleCategoryIconFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
         const file = event.target.files[0];
         setCategoryIconFile(file);
-        categoryForm.setValue('icon_image_url', ''); // Clear URL if a file is chosen
+        categoryForm.setValue('icon_image_url', '');
     } else {
         setCategoryIconFile(null);
         if (currentCategory?.icon_image_url) {
             setCategoryIconPreview(currentCategory.icon_image_url);
         } else {
             setCategoryIconPreview(null);
+        }
+    }
+  };
+
+  const handleSkillIconFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+        const file = event.target.files[0];
+        setSkillIconFile(file);
+        skillForm.setValue('icon_image_url', '');
+    } else {
+        setSkillIconFile(null);
+        if (currentSkill?.icon_image_url) {
+            setSkillIconPreview(currentSkill.icon_image_url);
+        } else {
+            setSkillIconPreview(null);
         }
     }
   };
@@ -487,21 +523,62 @@ const triggerDeleteConfirmation = (project: Project) => {
 
   // Skill Handlers
   const onSkillSubmit: SubmitHandler<SkillFormData> = async (formData) => {
+    let iconUrlToSave = formData.icon_image_url;
+
+    if (skillIconFile) {
+        const fileExt = skillIconFile.name.split('.').pop();
+        const fileName = `${Date.now()}_skill_icon.${fileExt}`;
+        const filePath = `${fileName}`;
+        toast({ title: "Uploading Skill Icon", description: "Please wait...", variant: "default" });
+        const { data: uploadData, error: uploadError } = await supabase.storage.from('skill-icons').upload(filePath, skillIconFile, { cacheControl: '3600', upsert: false });
+        if (uploadError) {
+            console.error("Error uploading skill icon:", JSON.stringify(uploadError, null, 2));
+            toast({ title: "Upload Error", description: `Failed to upload skill icon: ${uploadError.message}`, variant: "destructive" });
+            return;
+        }
+        const { data: publicUrlData } = supabase.storage.from('skill-icons').getPublicUrl(filePath);
+        if (!publicUrlData?.publicUrl) {
+            toast({ title: "Error", description: "Failed to get public URL for uploaded skill icon.", variant: "destructive" });
+            return;
+        }
+        iconUrlToSave = publicUrlData.publicUrl;
+    }
+
+    const skillDataToSave = {
+        category_id: formData.category_id,
+        name: formData.name,
+        icon_image_url: iconUrlToSave || null,
+        description: formData.description || null,
+    };
+
     if (currentSkill?.id) { // Update
-      const { error } = await supabase.from('skills').update(formData).eq('id', currentSkill.id);
+      const { error } = await supabase.from('skills').update(skillDataToSave).eq('id', currentSkill.id);
       if (error) { toast({ title: "Error", description: `Failed to update skill: ${error.message}`, variant: "destructive" }); }
       else { toast({ title: "Success", description: "Skill updated." }); }
     } else { // Add
-      const { error } = await supabase.from('skills').insert(formData);
+      const { error } = await supabase.from('skills').insert(skillDataToSave);
       if (error) { toast({ title: "Error", description: `Failed to add skill: ${error.message}`, variant: "destructive" }); }
       else { toast({ title: "Success", description: "Skill added." }); }
     }
-    setIsSkillModalOpen(false); setCurrentSkill(null); setParentCategoryIdForNewSkill(null); fetchSkillCategories(); router.refresh();
+    setIsSkillModalOpen(false); setCurrentSkill(null); setParentCategoryIdForNewSkill(null); setSkillIconFile(null); setSkillIconPreview(null);
+    const skillIconInput = document.getElementById('skill_icon_file') as HTMLInputElement;
+    if (skillIconInput) skillIconInput.value = '';
+    fetchSkillCategories(); router.refresh();
   };
 
   const handleOpenSkillModal = (category_id: string, skill?: SkillType) => {
     setParentCategoryIdForNewSkill(category_id);
-    setCurrentSkill(skill || null);
+    if (skill) {
+        setCurrentSkill({
+            id: skill.id,
+            category_id: skill.categoryId || category_id,
+            name: skill.name,
+            icon_image_url: skill.iconImageUrl || '',
+            description: skill.description || '',
+        });
+    } else {
+        setCurrentSkill(null); // For adding new skill
+    }
     skillForm.setValue('category_id', category_id);
     setIsSkillModalOpen(true);
   };
@@ -515,12 +592,6 @@ const triggerDeleteConfirmation = (project: Project) => {
     if (error) { toast({ title: "Error", description: `Failed to delete skill: ${error.message}`, variant: "destructive" }); }
     else { toast({ title: "Success", description: "Skill deleted." }); fetchSkillCategories(); router.refresh(); }
     setShowSkillDeleteConfirm(false); setSkillToDelete(null);
-  };
-
-  const getIconComponent = (iconName: string | null | undefined, defaultIcon: LucideIcons.LucideIcon = HelpCircle): LucideIcons.LucideIcon => {
-    if (!iconName) return defaultIcon;
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcons.LucideIcon | undefined;
-    return Icon && typeof Icon === 'function' ? Icon : defaultIcon;
   };
 
 
@@ -658,14 +729,12 @@ const triggerDeleteConfirmation = (project: Project) => {
           {isLoadingSkills ? <p className="text-center text-muted-foreground">Loading skills...</p> : (
             skillCategories.length === 0 ? <p className="text-center text-muted-foreground py-8">No skill categories found. Add one to get started!</p> : (
               <Accordion type="multiple" className="w-full">
-                {skillCategories.map(category => {
-                  // Using a generic icon for categories in admin dashboard for now
-                  const CategoryIcon = DefaultCategoryIcon;
-                  return (
+                {skillCategories.map(category => (
                   <AccordionItem value={category.id} key={category.id}>
                     <AccordionTrigger className="hover:bg-muted/50 px-4 py-3 rounded-md">
                       <div className="flex items-center gap-3">
-                         {/* Removed dynamic icon for category in accordion trigger, can add img thumbnail later if needed */}
+                         {category.iconImageUrl && <Image src={category.iconImageUrl} alt={category.name} width={24} height={24} className="rounded-sm"/>}
+                         {!category.iconImageUrl && <DefaultCategoryIcon className="h-6 w-6 text-muted-foreground"/>}
                         <span className="font-medium text-lg">{category.name}</span>
                         <Badge variant="outline">{category.skills?.length || 0} skills</Badge>
                       </div>
@@ -678,12 +747,11 @@ const triggerDeleteConfirmation = (project: Project) => {
                       </div>
                       {category.skills && category.skills.length > 0 ? (
                         <div className="space-y-2">
-                          {category.skills.map(skill => {
-                            const SkillIcon = getIconComponent(skill.iconName, DefaultSkillIcon);
-                            return (
+                          {category.skills.map(skill => (
                             <Card key={skill.id} className="p-3 flex justify-between items-center bg-card hover:shadow-sm">
                               <div className="flex items-center gap-2">
-                                <SkillIcon className="h-4 w-4 text-secondary-foreground/70"/>
+                                {skill.iconImageUrl && <Image src={skill.iconImageUrl} alt={skill.name} width={16} height={16} className="rounded-sm"/>}
+                                {!skill.iconImageUrl && <DefaultSkillIcon className="h-4 w-4 text-secondary-foreground/70"/>}
                                 <div>
                                   <p className="font-medium">{skill.name}</p>
                                   {skill.description && <p className="text-xs text-muted-foreground">{skill.description}</p>}
@@ -694,12 +762,12 @@ const triggerDeleteConfirmation = (project: Project) => {
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => triggerSkillDeleteConfirmation(skill)}><Trash2 className="h-4 w-4"/></Button>
                               </div>
                             </Card>
-                          )})}
+                          ))}
                         </div>
                       ) : <p className="text-sm text-muted-foreground text-center py-3">No skills in this category yet.</p>}
                     </AccordionContent>
                   </AccordionItem>
-                )})}
+                ))}
               </Accordion>
             )
           )}
@@ -715,7 +783,6 @@ const triggerDeleteConfirmation = (project: Project) => {
           <DialogHeader><DialogTitle>{currentCategory?.id ? 'Edit Skill Category' : 'Add New Skill Category'}</DialogTitle></DialogHeader>
           <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="grid gap-4 py-4">
             <div><Label htmlFor="categoryName">Name</Label><Input id="categoryName" {...categoryForm.register("name")} />{categoryForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{categoryForm.formState.errors.name.message}</p>}</div>
-            
             <div className="space-y-2">
               <Label htmlFor="category_icon_file">Category Icon File</Label>
               <div className="flex items-center gap-3">
@@ -733,7 +800,6 @@ const triggerDeleteConfirmation = (project: Project) => {
                 {categoryForm.formState.errors.icon_image_url && <p className="text-destructive text-sm mt-1">{categoryForm.formState.errors.icon_image_url.message}</p>}
               </div>
             </div>
-
             <div><Label htmlFor="categorySortOrder">Sort Order</Label><Input id="categorySortOrder" type="number" {...categoryForm.register("sort_order")} /></div>
             <DialogFooter>
                 <DialogClose asChild><Button type="button" variant="outline" onClick={() => { setCategoryIconFile(null); setCategoryIconPreview(null); }}>Cancel</Button></DialogClose>
@@ -746,21 +812,35 @@ const triggerDeleteConfirmation = (project: Project) => {
        {/* Skill Modal */}
       <Dialog open={isSkillModalOpen} onOpenChange={(isOpen) => {
           setIsSkillModalOpen(isOpen);
-          if (!isOpen) { setCurrentSkill(null); setParentCategoryIdForNewSkill(null); }
+          if (!isOpen) { setCurrentSkill(null); setParentCategoryIdForNewSkill(null); setSkillIconFile(null); setSkillIconPreview(null); }
       }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{currentSkill?.id ? 'Edit Skill' : 'Add New Skill'}</DialogTitle></DialogHeader>
           <form onSubmit={skillForm.handleSubmit(onSkillSubmit)} className="grid gap-4 py-4">
             <input type="hidden" {...skillForm.register("category_id")} />
             <div><Label htmlFor="skillName">Skill Name</Label><Input id="skillName" {...skillForm.register("name")} />{skillForm.formState.errors.name && <p className="text-destructive text-sm mt-1">{skillForm.formState.errors.name.message}</p>}</div>
-            <div>
-              <Label htmlFor="skillIconName">
-                Icon Name (<a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lucide</a>)
-              </Label>
-              <Input id="skillIconName" {...skillForm.register("icon_name")} placeholder="e.g., SquareCode, Orbit"/>
+             <div className="space-y-2">
+              <Label htmlFor="skill_icon_file">Skill Icon File</Label>
+              <div className="flex items-center gap-3">
+                <Input id="skill_icon_file" type="file" accept="image/*" onChange={handleSkillIconFileChange} className="flex-grow" />
+                <UploadCloud className="h-6 w-6 text-muted-foreground"/>
+              </div>
+              {skillIconPreview && (
+                <div className="mt-2 p-2 border rounded-md bg-muted aspect-square relative w-24 h-24 mx-auto">
+                  <Image src={skillIconPreview} alt="Skill icon preview" layout="fill" objectFit="contain" className="rounded"/>
+                </div>
+              )}
+               <div>
+                <Label htmlFor="skill_icon_image_url" className="text-xs text-muted-foreground">Or enter Icon Image URL (upload will override)</Label>
+                <Input id="skill_icon_image_url" {...skillForm.register("icon_image_url")} placeholder="https://example.com/icon.png" />
+                {skillForm.formState.errors.icon_image_url && <p className="text-destructive text-sm mt-1">{skillForm.formState.errors.icon_image_url.message}</p>}
+              </div>
             </div>
             <div><Label htmlFor="skillDescription">Description (Optional)</Label><Textarea id="skillDescription" {...skillForm.register("description")} /></div>
-            <DialogFooter><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit">{currentSkill?.id ? 'Save Changes' : 'Add Skill'}</Button></DialogFooter>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline" onClick={() => { setSkillIconFile(null); setSkillIconPreview(null); }}>Cancel</Button></DialogClose>
+                <Button type="submit">{currentSkill?.id ? 'Save Changes' : 'Add Skill'}</Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

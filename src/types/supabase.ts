@@ -23,7 +23,6 @@ export interface Database {
           title: string
           description: string | null
           image_url: string | null
-          // image_hint: string | null // Removed
           live_demo_url: string | null
           repo_url: string | null
           tags: string[] | null
@@ -36,7 +35,6 @@ export interface Database {
           title: string
           description?: string | null
           image_url?: string | null
-          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -49,7 +47,6 @@ export interface Database {
           title?: string
           description?: string | null
           image_url?: string | null
-          // image_hint?: string | null // Removed
           live_demo_url?: string | null
           repo_url?: string | null
           tags?: string[] | null
@@ -63,21 +60,21 @@ export interface Database {
         Row: {
           id: string
           name: string
-          icon_image_url: string | null // Changed from icon_name
+          icon_image_url: string | null
           sort_order: number | null
           created_at: string
         }
         Insert: {
           id?: string
           name: string
-          icon_image_url?: string | null // Changed from icon_name
+          icon_image_url?: string | null
           sort_order?: number | null
           created_at?: string
         }
         Update: {
           id?: string
           name?: string
-          icon_image_url?: string | null // Changed from icon_name
+          icon_image_url?: string | null
           sort_order?: number | null
           created_at?: string
         }
@@ -87,7 +84,7 @@ export interface Database {
         Row: {
           id: string
           name: string
-          icon_name: string | null // Skills still use Lucide icon names
+          icon_image_url: string | null // Changed from icon_name
           description: string | null
           category_id: string | null
           created_at: string
@@ -95,7 +92,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          icon_name?: string | null
+          icon_image_url?: string | null // Changed from icon_name
           description?: string | null
           category_id?: string | null
           created_at?: string
@@ -103,7 +100,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          icon_name?: string | null
+          icon_image_url?: string | null // Changed from icon_name
           description?: string | null
           category_id?: string | null
           created_at?: string
@@ -156,7 +153,7 @@ export interface Database {
           date: string
           title: string
           description: string
-          icon_name: string // Timeline events still use Lucide icon names
+          icon_name: string
           type: string
           sort_order: number | null
           created_at: string
@@ -205,9 +202,9 @@ export interface Project {
   id: string;
   title: string;
   description: string | null;
-  imageUrl: string | null;
-  liveDemoUrl?: string | null;
-  repoUrl?: string | null;
+  imageUrl: string | null; // Corresponds to image_url in DB
+  liveDemoUrl?: string | null; // Corresponds to live_demo_url in DB
+  repoUrl?: string | null; // Corresponds to repo_url in DB
   tags: string[] | null;
   status: ProjectStatus | null;
   progress?: number | null;
@@ -217,7 +214,7 @@ export interface Project {
 export interface Skill {
   id: string;
   name: string;
-  iconName: string | null; // Lucide icon name
+  iconImageUrl: string | null; // Changed from iconName, corresponds to icon_image_url in DB
   description: string | null;
   categoryId?: string | null;
 }
@@ -225,9 +222,9 @@ export interface Skill {
 export interface SkillCategory {
   id: string;
   name: string;
-  iconImageUrl?: string | null; // URL of uploaded image
+  iconImageUrl?: string | null; // Corresponds to icon_image_url in DB
   skills?: Skill[];
-  skillCount?: number;
+  skillCount?: number; // UI helper, not in DB
   sort_order?: number | null;
 }
 
@@ -238,7 +235,7 @@ export interface TimelineEvent {
   date: string;
   title: string;
   description: string;
-  iconName: string; // Lucide icon name
+  iconName: string; // Lucide icon name, corresponds to icon_name in DB
   type: TimelineEventType;
   sort_order?: number | null;
 }
@@ -248,8 +245,8 @@ export interface Certification {
   title: string;
   issuer: string;
   date: string;
-  imageUrl: string | null;
+  imageUrl: string | null; // Corresponds to image_url in DB
   imageHint: string | null;
-  verifyUrl?: string | null;
+  verifyUrl?: string | null; // Corresponds to verify_url in DB
   created_at: string;
 }

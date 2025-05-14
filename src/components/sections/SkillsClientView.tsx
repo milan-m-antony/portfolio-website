@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import SectionTitle from '@/components/ui/SectionTitle';
 import SkillCard from '@/components/ui/SkillCard';
-import CategoryCard from '@/components/ui/CategoryCard';
+import CategoryCard from '@/components/ui/CategoryCard'; // CategoryCard will now show uploaded images
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, X as ClearIcon, ArrowLeft } from 'lucide-react';
@@ -40,7 +40,11 @@ export default function SkillsClientView({ initialSkillsData }: SkillsClientView
 
   const categoriesToDisplay = useMemo(() => {
     if (!isCategoriesOverviewView) return [];
-    return initialSkillsData;
+    // For category overview, we now directly pass iconImageUrl to CategoryCard
+    return initialSkillsData.map(cat => ({
+        ...cat,
+        iconImageUrl: cat.iconImageUrl // Ensure this prop is passed
+    }));
   }, [isCategoriesOverviewView, initialSkillsData]);
 
   const skillsToDisplay = useMemo(() => {
@@ -54,7 +58,7 @@ export default function SkillsClientView({ initialSkillsData }: SkillsClientView
         category.skills?.forEach(skill => {
           if (skill.name.toLowerCase().includes(lowerSearchTerm) || category.name.toLowerCase().includes(lowerSearchTerm)) {
             if (!allMatchingSkills.find(s => s.id === skill.id)) {
-                 allMatchingSkills.push({ ...skill, categoryId: category.id });
+                 allMatchingSkills.push({ ...skill, categoryId: category.id, iconImageUrl: skill.iconImageUrl }); // Pass iconImageUrl
             }
           }
         });
@@ -63,13 +67,13 @@ export default function SkillsClientView({ initialSkillsData }: SkillsClientView
     }
     
     if (isCategorySelectedView && selectedCategory) { 
-      return selectedCategory.skills?.map(s => ({ ...s, categoryId: selectedCategory.id })) || [];
+      return selectedCategory.skills?.map(s => ({ ...s, categoryId: selectedCategory.id, iconImageUrl: s.iconImageUrl })) || []; // Pass iconImageUrl
     }
 
     if (isCategorySearchActive && selectedCategory) {
       return selectedCategory.skills?.filter(skill => 
         skill.name.toLowerCase().includes(lowerSearchTerm)
-      ).map(s => ({ ...s, categoryId: selectedCategory.id })) || [];
+      ).map(s => ({ ...s, categoryId: selectedCategory.id, iconImageUrl: s.iconImageUrl })) || []; // Pass iconImageUrl
     }
 
     return [];
@@ -129,10 +133,9 @@ export default function SkillsClientView({ initialSkillsData }: SkillsClientView
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {categoriesToDisplay.map((category, index) => (
                 <div key={category.id} className="animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
-                  <CategoryCard
+                  <CategoryCard // CategoryCard now expects iconImageUrl
                     name={category.name}
-                    iconName={category.iconName}
-                    iconColor={category.iconColor || undefined}
+                    iconImageUrl={category.iconImageUrl || null} // Pass the image URL
                     skillCount={category.skills?.length || 0}
                     onClick={() => handleCategorySelect(category)}
                   />
@@ -149,7 +152,7 @@ export default function SkillsClientView({ initialSkillsData }: SkillsClientView
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {skillsToDisplay.map((skill, index) => (
                 <div key={skill.id} className="animate-fadeIn" style={{animationDelay: `${index * 0.05}s`}}>
-                  <SkillCard skill={skill} />
+                  <SkillCard skill={skill} /> {/* SkillCard now expects iconImageUrl in skill object */}
                 </div>
               ))}
             </div>

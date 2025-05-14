@@ -13,9 +13,9 @@ async function getSkillsData(): Promise<SkillCategory[]> {
     .select(`
       id,
       name,
-      icon_name,
+      icon_image_url, -- Changed from icon_name
       sort_order,
-      skills (id, name, icon_name, description, category_id)
+      skills (id, name, icon_image_url, description, category_id) -- Changed from icon_name for skills
     `)
     .order('sort_order', { ascending: true })
     .order('created_at', { foreignTable: 'skills', ascending: true }); // Order skills within categories
@@ -34,7 +34,6 @@ async function getSkillsData(): Promise<SkillCategory[]> {
     }
     errorMessage += `Status: ${status || 'N/A'} ${statusText || 'N/A'}.`;
     console.error(errorMessage);
-    // console.error("Full Supabase error object for skill_categories:", categoriesError);
     return [];
   }
 
@@ -49,10 +48,9 @@ async function getSkillsData(): Promise<SkillCategory[]> {
 
 
   return categoriesData.map(category => {
-    // Basic validation for category fields
     if (!category.id || !category.name) {
         console.warn('Skipping skill category due to missing required fields:', category);
-        return null; // Will be filtered out
+        return null;
     }
     const validSkills = category.skills ? category.skills.filter(skill => {
         if (!skill.id || !skill.name) {
@@ -62,14 +60,14 @@ async function getSkillsData(): Promise<SkillCategory[]> {
         return true;
     }).map(skill => ({
       ...skill,
-      iconName: skill.icon_name,
+      iconImageUrl: skill.icon_image_url, // Map to camelCase
       categoryId: skill.category_id
     })) : [];
 
     return {
       id: category.id,
       name: category.name,
-      iconName: category.icon_name,
+      iconImageUrl: category.icon_image_url, // Map to camelCase
       sort_order: category.sort_order,
       skills: validSkills
     };
@@ -82,9 +80,7 @@ export default async function SkillsSection() {
 
   return (
     <SectionWrapper id="skills" className="section-fade-in" style={{ animationDelay: '0.6s' }}>
-      {/* SectionTitle will be managed by SkillsClientView for dynamic titles */}
       <SkillsClientView initialSkillsData={skillsData} />
     </SectionWrapper>
   );
 }
-
