@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
@@ -14,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import type { Project, ProjectStatus } from '@/types/supabase'; // Use Project type from Supabase
+import type { Project, ProjectStatus } from '@/types/supabase'; 
 import {
   Dialog,
   DialogContent,
@@ -31,19 +30,26 @@ import { useToast } from '@/hooks/use-toast';
 
 
 const projectSchema = z.object({
-  id: z.string().uuid().optional(), // UUID, optional for new projects
+  id: z.string().uuid().optional(), 
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   image_hint: z.string().optional(),
   live_demo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   repo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)), // Comma-separated to array
+  tags: z.string().transform(val => val.split(',').map(tag => tag.trim()).filter(tag => tag)), 
   status: z.enum(['Deployed', 'In Progress', 'Prototype', 'Archived', 'Concept', 'Completed']),
   progress: z.coerce.number().min(0).max(100).optional().nullable(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
+// Type for currentProject state when editing (tags is a string for the form input)
+type CurrentProjectEditState = Omit<Project, 'tags' | 'imageUrl' | 'liveDemoUrl' | 'repoUrl'> & {
+    tags: string; // Form input expects comma-separated string
+    imageUrl?: string | null;
+    liveDemoUrl?: string | null;
+    repoUrl?: string | null;
+};
 
 
 export default function AdminDashboardPage() {
@@ -57,7 +63,7 @@ export default function AdminDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Omit<ProjectFormData, 'tags'> & { tags: string } | null>(null);
+  const [currentProject, setCurrentProject] = useState<CurrentProjectEditState | null>(null);
   const { toast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm<ProjectFormData>({
@@ -69,7 +75,7 @@ export default function AdminDashboardPage() {
         image_hint: '',
         live_demo_url: '',
         repo_url: '',
-        tags: '', // Expecting string here for the input field
+        tags: '', 
         status: 'Concept',
         progress: null,
       }
@@ -91,10 +97,10 @@ export default function AdminDashboardPage() {
       setValue('id', currentProject.id);
       setValue('title', currentProject.title);
       setValue('description', currentProject.description || '');
-      setValue('image_url', currentProject.image_url || '');
-      setValue('image_hint', currentProject.image_hint || '');
-      setValue('live_demo_url', currentProject.live_demo_url || '');
-      setValue('repo_url', currentProject.repo_url || '');
+      setValue('image_url', currentProject.imageUrl || '');
+      setValue('image_hint', currentProject.imageHint || '');
+      setValue('live_demo_url', currentProject.liveDemoUrl || '');
+      setValue('repo_url', currentProject.repoUrl || '');
       setValue('tags', currentProject.tags); // currentProject.tags is already a string
       setValue('status', currentProject.status || 'Concept');
       setValue('progress', currentProject.progress || null);
@@ -144,9 +150,10 @@ export default function AdminDashboardPage() {
     if (trimmedUsername === correctUsername && trimmedPassword === correctPassword) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('isAdminAuthenticated', 'true');
+        window.dispatchEvent(new CustomEvent('authChange')); // Dispatch event
       }
       setIsAuthenticatedForRender(true);
-      fetchProjects(); // Fetch projects after successful login
+      fetchProjects(); 
     } else {
       setError("Invalid username or password.");
       setIsAuthenticatedForRender(false);
@@ -156,22 +163,23 @@ export default function AdminDashboardPage() {
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdminAuthenticated');
+      window.dispatchEvent(new CustomEvent('authChange')); // Dispatch event
     }
     setIsAuthenticatedForRender(false);
     setUsername('');
     setPassword('');
-    setProjects([]); // Clear projects data on logout
+    setProjects([]); 
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
     const projectDataToSave: Omit<ProjectFormData, 'id' | 'tags'> & { id?: string; progress: number | null; tags: string[] } = {
       ...formData,
-      image_url: formData.image_url || undefined, // Use undefined for Supabase to treat as null if empty
+      image_url: formData.image_url || undefined, 
       image_hint: formData.image_hint || undefined,
       live_demo_url: formData.live_demo_url || undefined,
       repo_url: formData.repo_url || undefined,
       progress: formData.status === 'In Progress' && formData.progress !== undefined ? Number(formData.progress) : null,
-      tags: Array.isArray(formData.tags) ? formData.tags : (formData.tags as unknown as string).split(',').map(tag => tag.trim()).filter(Boolean),
+      tags: formData.tags, // Already an array due to zod transform
     };
     
 
@@ -190,7 +198,7 @@ export default function AdminDashboardPage() {
       const { id, ...dataToInsert } = projectDataToSave; 
       const { error: insertError } = await supabase
         .from('projects')
-        .insert(dataToInsert as any); // Using 'as any' temporarily if type mismatches are complex, ensure dataToInsert matches Supabase schema
+        .insert(dataToInsert as any); 
       if (insertError) {
         console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2));
         toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" });
@@ -223,16 +231,16 @@ export default function AdminDashboardPage() {
   
   const handleOpenProjectModal = (project?: Project) => {
     setCurrentProject(project ? {
-        ...project,
+        ...project, // Spread all properties from Project
         id: project.id,
         title: project.title,
         description: project.description || '',
-        image_url: project.imageUrl || '', 
-        image_hint: project.imageHint || '',
-        live_demo_url: project.liveDemoUrl || '',
-        repo_url: project.repoUrl || '',
-        tags: (project.tags || []).join(', '), 
-        status: project.status as ProjectStatus || 'Concept',
+        imageUrl: project.imageUrl || null, // Use correct property names from Project type
+        imageHint: project.imageHint || '',
+        liveDemoUrl: project.liveDemoUrl || null,
+        repoUrl: project.repoUrl || null,
+        tags: (project.tags || []).join(', '), // Convert array to string for form
+        status: project.status as ProjectStatus || 'Concept', // Ensure status is valid ProjectStatus
         progress: project.progress !== undefined ? project.progress : null,
     } : null);
     setIsProjectModalOpen(true);
@@ -309,7 +317,7 @@ export default function AdminDashboardPage() {
             Manage Projects
             <Dialog open={isProjectModalOpen} onOpenChange={(isOpen) => {
                 setIsProjectModalOpen(isOpen);
-                if (!isOpen) setCurrentProject(null); // Reset currentProject when dialog closes
+                if (!isOpen) setCurrentProject(null); 
              }}>
               <DialogTrigger asChild>
                 <Button onClick={() => handleOpenProjectModal()}>
