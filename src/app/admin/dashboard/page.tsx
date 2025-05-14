@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home, UploadCloud, Eye, Tag, Lightbulb, Palette, GripVertical, Package as DefaultCategoryIcon, CpuChip as DefaultSkillIcon, HelpCircle } from 'lucide-react';
+import { ShieldCheck, LogOut, AlertTriangle, LogIn, PlusCircle, Edit, Trash2, Home, UploadCloud, Eye, Tag, Lightbulb, Palette, GripVertical, Package as DefaultCategoryIcon, Cpu as DefaultSkillIcon, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { Project, ProjectStatus, SkillCategory, Skill as SkillType } from '@/types/supabase';
@@ -325,15 +325,15 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteProject = async () => {
+    console.log("[AdminDashboard] handleDeleteProject called.");
     if (!projectToDelete) {
         console.warn("[AdminDashboard] No project selected for deletion.");
         toast({ title: "Warning", description: "No project selected for deletion.", variant: "default" });
         return;
     }
     console.log(`[AdminDashboard] Attempting to delete project ID: ${projectToDelete.id}`);
+    console.log("[AdminDashboard] User confirmed delete. Proceeding with Supabase call...");
 
-    // Optional: Delete image from Supabase Storage if projectToDelete.imageUrl exists
-    // Add logic here if needed.
 
     const { error: deleteError } = await supabase.from('projects').delete().eq('id', projectToDelete.id);
 
@@ -351,6 +351,7 @@ export default function AdminDashboardPage() {
 };
 
 const triggerDeleteConfirmation = (project: Project) => {
+    console.log("[AdminDashboard] triggerDeleteConfirmation called for project:", project.title);
     setProjectToDelete(project);
     setShowProjectDeleteConfirm(true);
 };
@@ -528,7 +529,11 @@ const triggerDeleteConfirmation = (project: Project) => {
             <div className="space-y-4">
             {projects.map((project) => (
                 <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
-                  {project.imageUrl && (<div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border"><Image src={project.imageUrl} alt={project.title} fill objectFit="cover" /></div>)}
+                  {project.imageUrl && (
+                        <div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border">
+                            <Image src={project.imageUrl} alt={project.title} layout="fill" objectFit="cover" />
+                        </div>
+                    )}
                   <div className="flex-grow mb-3 sm:mb-0">
                     <h4 className="font-semibold text-lg">{project.title}</h4>
                     <p className="text-sm text-muted-foreground">Status: <span className={`font-medium ${project.status === 'Deployed' ? 'text-green-600' : project.status === 'In Progress' ? 'text-blue-600' : 'text-gray-600'}`}>{project.status}</span>{project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}</p>
