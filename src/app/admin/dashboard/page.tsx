@@ -46,6 +46,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from "@/components/ui/badge"; // Added import for Badge
 
 
 const projectSchema = z.object({
@@ -177,7 +178,7 @@ export default function AdminDashboardPage() {
       projectForm.setValue('image_url', currentProject.imageUrl || '');
       projectForm.setValue('live_demo_url', currentProject.liveDemoUrl || '');
       projectForm.setValue('repo_url', currentProject.repoUrl || '');
-      projectForm.setValue('tags', currentProject.tags);
+      projectForm.setValue('tags', currentProject.tags); // tags should be a string here
       projectForm.setValue('status', currentProject.status || 'Concept');
       projectForm.setValue('progress', currentProject.progress === null || currentProject.progress === undefined ? null : Number(currentProject.progress));
       setImageFile(null);
@@ -189,6 +190,7 @@ export default function AdminDashboardPage() {
       setImageFile(null); setImagePreview(null);
     }
   }, [currentProject, projectForm.setValue, projectForm.reset]);
+
 
   useEffect(() => {
     if (currentCategory) {
@@ -277,15 +279,17 @@ export default function AdminDashboardPage() {
   const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0]; setImageFile(file);
-      projectForm.setValue('image_url', '');
+      projectForm.setValue('image_url', ''); // Clear URL if file is chosen
     } else {
       setImageFile(null);
+      // If clearing file input and currentProject had an image, restore its preview
       if (currentProject?.imageUrl) setImagePreview(currentProject.imageUrl); else setImagePreview(null);
     }
   };
 
   const onProjectSubmit: SubmitHandler<ProjectFormData> = async (formData) => {
     let imageUrlToSave = formData.image_url;
+
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop(); const fileName = `${Date.now()}.${fileExt}`; const filePath = `${fileName}`;
       toast({ title: "Uploading Image", description: "Please wait...", variant: "default" });
@@ -298,19 +302,21 @@ export default function AdminDashboardPage() {
       if (!publicUrlData?.publicUrl) { toast({ title: "Error", description: "Failed to get public URL for uploaded image.", variant: "destructive" }); return; }
       imageUrlToSave = publicUrlData.publicUrl;
     }
+
     const projectDataToSave = {
       title: formData.title, description: formData.description, image_url: imageUrlToSave || null,
       live_demo_url: formData.live_demo_url || null, repo_url: formData.repo_url || null,
       tags: formData.tags, status: formData.status,
       progress: formData.status === 'In Progress' && formData.progress !== undefined && formData.progress !== null ? Number(formData.progress) : null,
     };
+
     if (currentProject?.id) {
       const { error: updateError } = await supabase.from('projects').update(projectDataToSave).eq('id', currentProject.id);
       if (updateError) { console.error("Error updating project (raw Supabase error object):", JSON.stringify(updateError, null, 2)); toast({ title: "Error", description: `Failed to update project: ${updateError.message || 'Supabase error.'}`, variant: "destructive" }); }
       else { toast({ title: "Success", description: "Project updated successfully." }); }
     } else {
       const { error: insertError } = await supabase.from('projects').insert(projectDataToSave as any);
-      if (insertError) { console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2)); toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase error.'}`, variant: "destructive" }); }
+      if (insertError) { console.error("Error adding project (raw Supabase error object):", JSON.stringify(insertError, null, 2)); toast({ title: "Error", description: `Failed to add project: ${insertError.message || 'Supabase returned an error without a specific message. Check RLS policies or console for details.'}`, variant: "destructive" }); }
       else { toast({ title: "Success", description: "Project added successfully." }); }
     }
     setIsProjectModalOpen(false); setCurrentProject(null); setImageFile(null); setImagePreview(null);
@@ -324,8 +330,13 @@ export default function AdminDashboardPage() {
 
   const performDeleteProject = async (projectId: string) => {
     console.log(`[AdminDashboard] performDeleteProject called for projectId: ${projectId}`);
-    if (!projectToDelete || projectToDelete.id !== projectId) { /* ... error handling ... */ return; }
+    if (!projectToDelete || projectToDelete.id !== projectId) {
+      console.warn("[AdminDashboard] Mismatch in project to delete state.");
+      toast({title: "Warning", description: "Could not confirm project for deletion. Please try again.", variant: "default"});
+      return;
+    }
     // TODO: Delete image from Supabase Storage if project.imageUrl exists
+
     const { error: deleteError } = await supabase.from('projects').delete().eq('id', projectId);
     if (deleteError) { console.error("[AdminDashboard] Error deleting project (raw Supabase error object):", JSON.stringify(deleteError, null, 2)); toast({ title: "Error", description: `Failed to delete project: ${deleteError.message || 'Supabase error.'}`, variant: "destructive" }); }
     else { console.log("[AdminDashboard] Project deleted successfully from Supabase."); toast({ title: "Success", description: "Project deleted successfully." }); fetchProjects(); router.refresh(); }
@@ -401,15 +412,58 @@ export default function AdminDashboardPage() {
   };
 
 
-  if (!isMounted) { /* ... loading state ... */ }
-  if (!isAuthenticatedForRender) { /* ... login form ... */ }
+  if (!isMounted) {
+    return (
+      <SectionWrapper>
+        <div className="flex justify-center items-center min-h-screen">
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </SectionWrapper>
+    );
+  }
+
+  if (!isAuthenticatedForRender) {
+    return (
+      <SectionWrapper className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/50">
+        <Card className="w-full max-w-md shadow-2xl p-8">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 p-3 bg-primary rounded-full inline-block">
+                <ShieldCheck className="h-10 w-10 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-3xl font-bold">Admin Access</CardTitle>
+            <CardDescription>Please log in to manage portfolio content.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLoginSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_email@example.com" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+              </div>
+              {error && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>Login Failed</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
+              <Button type="submit" className="w-full text-lg py-3"><LogIn className="mr-2 h-5 w-5" /> Log In</Button>
+            </form>
+          </CardContent>
+           <CardFooter className="mt-6 flex flex-col items-center space-y-2">
+             <Button variant="link" asChild className="text-muted-foreground hover:text-primary">
+                <Link href="/"><Home className="mr-2 h-4 w-4" />Back to Portfolio</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      </SectionWrapper>
+    );
+  }
+
 
   return (
     <SectionWrapper>
       <SectionTitle subtitle="Manage portfolio content.">Admin Dashboard</SectionTitle>
       <div className="flex justify-between items-center mb-6">
         <Button asChild className="mb-0">
-            <Link href="/">Back to Portfolio</Link>
+            <Link href="/"><Home className="mr-2 h-4 w-4"/>Back to Portfolio</Link>
         </Button>
         <Button variant="outline" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" /> Logout
@@ -456,7 +510,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-4">
             {projects.map((project) => (
                 <Card key={project.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:shadow-md transition-shadow">
-                  {project.imageUrl && (<div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border"><Image src={project.imageUrl} alt={project.title} layout="fill" objectFit="cover" /></div>)}
+                  {project.imageUrl && (<div className="w-24 h-16 relative mr-4 mb-2 sm:mb-0 flex-shrink-0 rounded overflow-hidden border"><Image src={project.imageUrl} alt={project.title || 'Project image'} layout="fill" objectFit="cover" /></div>)}
                   <div className="flex-grow mb-3 sm:mb-0">
                     <h4 className="font-semibold text-lg">{project.title}</h4>
                     <p className="text-sm text-muted-foreground">Status: <span className={`font-medium ${project.status === 'Deployed' ? 'text-green-600' : project.status === 'In Progress' ? 'text-blue-600' : 'text-gray-600'}`}>{project.status}</span>{project.status === 'In Progress' && project.progress != null && ` (${project.progress}%)`}</p>
@@ -464,7 +518,9 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="flex space-x-2 self-start sm:self-center shrink-0">
                     <Button variant="outline" size="sm" onClick={() => handleOpenProjectModal(project)}><Edit className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
-                    <Button variant="destructive" size="sm" onClick={() => triggerProjectDeleteConfirmation(project)}><Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete</Button>
+                    <Button variant="destructive" size="sm" onClick={() => triggerProjectDeleteConfirmation(project)}>
+                         <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete
+                    </Button>
                   </div>
                 </Card>
             ))}</div>
@@ -472,7 +528,6 @@ export default function AdminDashboardPage() {
         </CardContent>
       </Card>
       <AlertDialog open={showProjectDeleteConfirm} onOpenChange={setShowProjectDeleteConfirm}>
-        {/* Project Delete Confirm AlertDialog ... */}
         <AlertDialogContent className="bg-destructive border-destructive text-destructive-foreground"><AlertDialogHeader><AlertDialogTitle className="text-destructive-foreground">Are you absolutely sure?</AlertDialogTitle><AlertDialogDescription className="text-destructive-foreground/90">This action cannot be undone. This will permanently delete the project "{projectToDelete?.title}".</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel onClick={() => { setShowProjectDeleteConfirm(false); setProjectToDelete(null);}} className={cn(buttonVariants({ variant: "outline" }), "border-destructive-foreground/40 text-destructive-foreground", "hover:bg-destructive-foreground/10 hover:text-destructive-foreground hover:border-destructive-foreground/60")}>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => {if (projectToDelete) performDeleteProject(projectToDelete.id);}} className={cn(buttonVariants({ variant: "default" }), "bg-destructive-foreground text-destructive", "hover:bg-destructive-foreground/90")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
 
@@ -582,5 +637,3 @@ export default function AdminDashboardPage() {
     </SectionWrapper>
   );
 }
-
-    
