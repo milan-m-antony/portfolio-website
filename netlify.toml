@@ -1,9 +1,7 @@
-# Netlify configuration file for Next.js project
-
+toml
 [build]
-  # Command to build the project
-  command = "npm run build"
+command = "next build"
+publish = ".next"
 
-  # Publish directory: for Next.js, use '.next' for SSR or SSG
-  publish = ".next"
-
+[[plugins]]
+package = "@netlify/plugin-nextjs"
