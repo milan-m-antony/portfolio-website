@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
@@ -6,14 +7,21 @@ import * as LucideIcons from 'lucide-react'; // Import all icons
 
 interface CategoryCardProps {
   name: string;
-  iconName: string | null; // Changed from icon: LucideIcon
+  iconName: string | null;
   iconColor?: string;
   skillCount: number;
   onClick: () => void;
 }
 
 export default function CategoryCard({ name, iconName, iconColor = 'text-primary', skillCount, onClick }: CategoryCardProps) {
-  const Icon = iconName ? (LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon || LucideIcons.Package) : LucideIcons.Package; // Default icon
+  let IconComponent: LucideIcon = LucideIcons.Package; // Default icon
+
+  if (iconName) {
+    const FoundIcon = LucideIcons[iconName as keyof typeof LucideIcons];
+    if (typeof FoundIcon === 'function') {
+      IconComponent = FoundIcon as LucideIcon;
+    }
+  }
 
   return (
     <Card
@@ -25,7 +33,7 @@ export default function CategoryCard({ name, iconName, iconColor = 'text-primary
       aria-label={`View skills in ${name} category`}
     >
       <CardHeader className="pb-2">
-        <Icon className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", iconColor)} />
+        <IconComponent className={cn("h-12 w-12 mx-auto mb-3 transition-transform group-hover:scale-110", iconColor)} />
         <CardTitle className="text-xl font-semibold text-foreground">{name}</CardTitle>
       </CardHeader>
       <CardContent>
