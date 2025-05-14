@@ -1,385 +1,82 @@
 
+// This file is now largely superseded by data fetched from Supabase.
+// We'll keep type definitions here or move them to a dedicated types file (e.g., src/types/supabase.ts)
+// For now, we'll keep existing types and add Supabase-specific ones in src/types/supabase.ts
+// The actual data arrays (projectsData, skillsData, etc.) will be removed or commented out
+// as data will be fetched from Supabase.
+
 import type { LucideIcon } from 'lucide-react';
 import {
-  Briefcase, GraduationCap, Award, Code, Laptop, Database, Brain, Settings, Users, Star, GitMerge, Server, Palette, MessageSquare, Users2, Clock, Target, Cloud, PenTool, Film, BarChart2, BookOpen, FileText,
-  Terminal, GitFork, Figma, FileCode, Package, Layers3, Orbit, Wind, GalleryThumbnails, Webhook, Route, Coffee, Binary, CodeXml, FileJson2, FileBadge2, DatabaseZap, Cpu, Network, Share2, Activity, ShieldCheck, Lightbulb, Workflow, Sparkles, TestTube2,
-  Smartphone, Bot, ServerCog, CloudCog, DatabaseBackup, FolderGit2, Blocks, Anchor, Atom, AppWindow, BookMarked, Puzzle, BookHeart,
-  Braces, SquareCode, Link, DatabaseIcon as SqlDatabase, BrainCircuit, Settings2, CircleUser, CheckCircle, Zap, DraftingCompass, Video, GanttChartSquare, Edit3, DownloadCloud, FolderKanban, UserCog,
-  Rocket, Wrench, FlaskConical, CheckCircle2, Archive, ClipboardList
+  Lightbulb, Briefcase, Award, GraduationCap, Laptop, Star,
+  // Skill icons (will be mapped from names)
 } from 'lucide-react';
 
-export type ProjectStatus = 'Deployed' | 'In Progress' | 'Prototype' | 'Archived' | 'Concept' | 'Completed';
 
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  imageHint: string;
-  liveDemoUrl?: string;
-  repoUrl?: string;
-  tags: string[];
-  status: ProjectStatus;
-  progress?: number; // Optional, for 'In Progress' status
-}
+// Original types - can be aligned with Supabase table structures
+// export type ProjectStatus = 'Deployed' | 'In Progress' | 'Prototype' | 'Archived' | 'Concept' | 'Completed';
 
-export interface Skill {
-  name: string;
-  icon: LucideIcon;
-  description: string;
-}
+// export interface Project {
+//   id: string;
+//   title: string;
+//   description: string;
+//   imageUrl: string;
+//   imageHint: string;
+//   liveDemoUrl?: string;
+//   repoUrl?: string;
+//   tags: string[];
+//   status: ProjectStatus;
+//   progress?: number;
+// }
 
-export interface SkillCategory {
-  name: string;
-  icon: LucideIcon;
-  iconColor?: string; // For colorful category icons
-  skills: Skill[];
-}
+// export interface Skill {
+//   name: string;
+//   icon: LucideIcon; // Will become iconName: string when fetched from DB
+//   description: string;
+// }
 
-
-export interface TimelineEvent {
-  id: string;
-  date: string;
-  title: string;
-  description: string;
-  iconName: keyof typeof IconMap; 
-  type: 'work' | 'education' | 'certification' | 'milestone';
-}
-
-// This map is used by TimelineItem.tsx to render the correct icon
-const IconMap = {
-  Lightbulb,
-  Briefcase,
-  Award,
-  GraduationCap,
-  Laptop,
-  Star,
-};
+// export interface SkillCategory {
+//   name: string;
+//   icon: LucideIcon; // Will become iconName: string
+//   iconColor?: string;
+//   skills: Skill[];
+// }
 
 
-export interface Certification {
-  id: string;
-  title: string;
-  issuer: string;
-  date: string;
-  imageUrl: string;
-  imageHint: string;
-  verifyUrl?: string;
-}
+// export interface TimelineEvent {
+//   id: string;
+//   date: string;
+//   title: string;
+//   description: string;
+//   iconName: keyof typeof IconMap; 
+//   type: 'work' | 'education' | 'certification' | 'milestone';
+// }
 
-export const projectsData: Project[] = [
-  {
-    id: '1',
-    title: 'E-commerce Platform',
-    description: 'A full-featured e-commerce platform with Next.js, Stripe, and Firebase. Includes product listings, cart, checkout, and user authentication.',
-    imageUrl: 'https://picsum.photos/seed/project1/600/400',
-    imageHint: 'online store',
-    liveDemoUrl: '#',
-    repoUrl: '#',
-    tags: ['Next.js', 'React', 'Firebase', 'Stripe', 'Tailwind CSS'],
-    status: 'Deployed',
-  },
-  {
-    id: '2',
-    title: 'AI Powered Blog Generator',
-    description: 'A SaaS application that uses OpenAI API to generate blog posts based on user prompts. Built with Python (Flask) and React.',
-    imageUrl: 'https://picsum.photos/seed/project2/600/400',
-    imageHint: 'ai writing',
-    repoUrl: '#',
-    tags: ['Python', 'Flask', 'React', 'OpenAI API', 'Docker'],
-    status: 'In Progress',
-    progress: 75,
-  },
-  {
-    id: '3',
-    title: 'Mobile Fitness Tracker',
-    description: 'Cross-platform mobile app for tracking workouts and nutrition. Developed using React Native and Firebase.',
-    imageUrl: 'https://picsum.photos/seed/project3/600/400',
-    imageHint: 'fitness app',
-    liveDemoUrl: '#', 
-    tags: ['React Native', 'Firebase', 'Mobile App'],
-    status: 'Prototype',
-  },
-  {
-    id: '4',
-    title: 'Data Visualization Dashboard',
-    description: 'An interactive dashboard for visualizing complex datasets using D3.js and React. Features various chart types and filtering options.',
-    imageUrl: 'https://picsum.photos/seed/project4/600/400',
-    imageHint: 'data dashboard charts',
-    liveDemoUrl: '#',
-    repoUrl: '#', 
-    tags: ['React', 'D3.js', 'Data Visualization', 'JavaScript'],
-    status: 'Completed',
-  },
-  {
-    id: '5',
-    title: 'Real-time Chat Application',
-    description: 'A scalable chat application built with Node.js, Socket.IO, and React. Supports multiple rooms and private messaging.',
-    imageUrl: 'https://picsum.photos/seed/project5/600/400',
-    imageHint: 'chat interface',
-    liveDemoUrl: '#', 
-    repoUrl: '#',
-    tags: ['Node.js', 'Socket.IO', 'React', 'MongoDB', 'Real-time'],
-    status: 'Deployed',
-  },
-  {
-    id: '6',
-    title: 'Personal Blog Platform',
-    description: 'A custom-built blogging platform with a Markdown editor, categories, tags, and a comment system. Developed using Next.js and Supabase.',
-    imageUrl: 'https://picsum.photos/seed/project6/600/400',
-    imageHint: 'blog website',
-    liveDemoUrl: '#',
-    repoUrl: '#',
-    tags: ['Next.js', 'Supabase', 'Markdown', 'PostgreSQL', 'SSR'],
-    status: 'In Progress',
-    progress: 40,
-  },
-  {
-    id: '7',
-    title: 'Recipe Sharing App',
-    description: 'A community-driven platform for users to share and discover new recipes. Features user accounts, recipe submission, and ratings.',
-    imageUrl: 'https://picsum.photos/seed/project7/600/400',
-    imageHint: 'food recipe app',
-    tags: ['Vue.js', 'Firebase', 'Nuxt.js', 'Vuetify'],
-    status: 'Concept',
-  },
-  {
-    id: '8',
-    title: 'Indie Game Project',
-    description: 'A 2D platformer game being developed with Godot Engine. Focus on pixel art and engaging gameplay mechanics.',
-    imageUrl: 'https://picsum.photos/seed/project8/600/400',
-    imageHint: 'pixel art game',
-    tags: ['Godot Engine', 'GDScript', 'Game Development', 'Pixel Art'],
-    status: 'Archived',
-  }
-];
-
-export const skillsData: SkillCategory[] = [
-  {
-    name: 'Programming Languages',
-    icon: Braces, 
-    iconColor: 'text-sky-500',
-    skills: [
-      { name: 'Python', icon: SquareCode, description: 'Versatile language for web, data science, and AI.' }, 
-      { name: 'JavaScript', icon: SquareCode, description: 'Core language for web interactivity and full-stack development.' }, 
-      { name: 'TypeScript', icon: SquareCode, description: 'Superset of JavaScript adding static types for robust applications.' }, 
-      { name: 'Java', icon: Coffee, description: 'Widely-used, object-oriented language for enterprise applications.' },
-      { name: 'C / C++', icon: Binary, description: 'Powerful languages for system programming and performance-critical tasks.' },
-      { name: 'HTML / CSS', icon: Palette, description: 'Fundamental technologies for structuring and styling web content.' },
-    ],
-  },
-  {
-    name: 'Web Development',
-    icon: Laptop,
-    iconColor: 'text-blue-600',
-    skills: [
-      { name: 'React.js', icon: Orbit, description: 'JavaScript library for building user interfaces.' },
-      { name: 'Next.js', icon: Layers3, description: 'React framework for server-side rendering and static site generation.' },
-      { name: 'Node.js', icon: Package, description: 'JavaScript runtime for building server-side applications.' },
-      { name: 'Express.js', icon: Route, description: 'Minimalist web framework for Node.js.' },
-      { name: 'RESTful APIs', icon: Link, description: 'Designing and implementing scalable web services.' }, 
-      { name: 'Tailwind CSS', icon: Wind, description: 'Utility-first CSS framework for rapid UI development.' },
-      { name: 'Bootstrap', icon: GalleryThumbnails, description: 'Popular front-end framework for responsive web design.' },
-    ],
-  },
-  {
-    name: 'Mobile Development',
-    icon: Smartphone,
-    iconColor: 'text-green-500',
-    skills: [
-      { name: 'React Native', icon: Orbit, description: 'Framework for building native mobile apps with React.' },
-      { name: 'Flutter (Dart)', icon: AppWindow, description: 'UI toolkit for building natively compiled applications for mobile, web, and desktop from a single codebase.' },
-      { name: 'Android (Java/Kotlin)', icon: Smartphone, description: 'Native Android app development using Java and Kotlin.' },
-    ],
-  },
-  {
-    name: 'Cloud & DevOps',
-    icon: CloudCog,
-    iconColor: 'text-purple-500',
-    skills: [
-      { name: 'Microsoft Azure', icon: Cloud, description: 'Cloud computing platform for building, deploying, and managing applications.' },
-      { name: 'GitHub Actions', icon: Workflow, description: 'CI/CD and automation platform integrated with GitHub.' },
-      { name: 'Docker', icon: Anchor, description: 'Platform for developing, shipping, and running applications in containers.' },
-      { name: 'Firebase', icon: Cloud, description: 'Platform for building mobile and web applications with backend services.' },
-    ],
-  },
-  {
-    name: 'Databases',
-    icon: Database, 
-    iconColor: 'text-yellow-500',
-    skills: [
-      { name: 'MongoDB', icon: DatabaseZap, description: 'NoSQL document-oriented database.' },
-      { name: 'MySQL', icon: SqlDatabase, description: 'Popular open-source relational database.' }, 
-      { name: 'PostgreSQL', icon: SqlDatabase, description: 'Powerful open-source object-relational database system.' }, 
-      { name: 'SQLite', icon: FileText, description: 'Lightweight, file-based relational database.' },
-    ],
-  },
-  {
-    name: 'AI / ML / Data',
-    icon: BrainCircuit, 
-    iconColor: 'text-red-500',
-    skills: [
-      { name: 'Pandas', icon: BarChart2, description: 'Data manipulation and analysis library for Python.' },
-      { name: 'NumPy', icon: Atom, description: 'Fundamental package for numerical computation in Python.' },
-      { name: 'Scikit-learn', icon: TestTube2, description: 'Machine learning library for Python.' },
-      { name: 'TensorFlow', icon: Cpu, description: 'Open-source machine learning framework.' },
-      { name: 'Keras', icon: Blocks, description: 'High-level neural networks API, running on top of TensorFlow.' },
-      { name: 'OpenAI API', icon: Bot, description: 'Access to powerful AI models like GPT for various tasks.' },
-      { name: 'Data Visualization', icon: Share2, description: 'Creating informative visuals with Matplotlib and Seaborn.' },
-    ],
-  },
-  {
-    name: 'Tools & Platforms',
-    icon: Settings2, 
-    iconColor: 'text-indigo-500',
-    skills: [
-      { name: 'Git', icon: GitFork, description: 'Distributed version control system.' },
-      { name: 'GitHub', icon: FolderGit2, description: 'Web-based platform for version control and collaboration using Git.' },
-      { name: 'VS Code', icon: FileCode, description: 'Popular source code editor with extensive features.' },
-      { name: 'Figma', icon: Figma, description: 'Collaborative interface design tool.' },
-      { name: 'Adobe XD', icon: DraftingCompass, description: 'Vector-based UI/UX design tool for web and mobile apps.' }, 
-      { name: 'Postman', icon: Network, description: 'API platform for building and using APIs.' },
-      { name: 'Linux', icon: Terminal, description: 'Open-source operating system widely used in servers and development.' },
-      { name: 'WSL', icon: Laptop, description: 'Windows Subsystem for Linux for running Linux environments on Windows.' },
-      { name: 'Ubuntu', icon: ServerCog, description: 'Popular Linux distribution.' },
-    ],
-  },
-  {
-    name: 'Soft Skills',
-    icon: CircleUser, 
-    iconColor: 'text-teal-500',
-    skills: [
-      { name: 'Problem Solving', icon: Lightbulb, description: 'Identifying issues and implementing effective solutions.' },
-      { name: 'Communication', icon: MessageSquare, description: 'Clearly conveying ideas and collaborating with teams.' },
-      { name: 'Team Collaboration', icon: Users2, description: 'Working effectively with others towards common goals.' },
-      { name: 'Time Management', icon: Clock, description: 'Organizing tasks and meeting deadlines efficiently.' },
-      { name: 'Creativity', icon: Sparkles, description: 'Developing innovative ideas and approaches.' },
-    ],
-  },
-];
+// const IconMap = {
+//   Lightbulb,
+//   Briefcase,
+//   Award,
+//   GraduationCap,
+//   Laptop,
+//   Star,
+// };
 
 
-export const timelineData: TimelineEvent[] = [
-  {
-    id: 'ev1',
-    date: 'Present',
-    title: 'Personal Projects Development',
-    description: 'Working on projects like Online Diagnostic Lab, Cloud Management, and this portfolio.',
-    iconName: 'Lightbulb',
-    type: 'milestone',
-  },
-  {
-    id: 'ev2',
-    date: 'June – Dec 2024',
-    title: 'Network Engineering Diploma & Training',
-    description: 'Enrolled in Diploma program and Network Support Engineer training at SMEC LABS, Kochi.',
-    iconName: 'Briefcase',
-    type: 'work',
-  },
-  {
-    id: 'ev3',
-    date: 'Dec 2024 (Expected)',
-    title: 'Expected Certifications (CCNA, MCSE, Azure Admin)',
-    description: 'Completing intensive training and certification exams for CCNA, MCSE, and Azure Administrator at SMEC.',
-    iconName: 'Award',
-    type: 'certification',
-  },
-  {
-    id: 'ev4',
-    date: '2024',
-    title: 'Graduated BCA',
-    description: 'Completed Bachelor of Computer Applications from B.V.M. Holy Cross College.',
-    iconName: 'GraduationCap',
-    type: 'education',
-  },
-  {
-    id: 'ev5',
-    date: '2021 – 2024',
-    title: 'BCA Studies',
-    description: 'Studied Computer Applications at B.V.M. Holy Cross College, Cherpunkal.',
-    iconName: 'GraduationCap',
-    type: 'education',
-  },
-  {
-    id: 'ev6',
-    date: '2021',
-    title: 'Started University Journey (BCA)',
-    description: "Began Bachelor's degree in Computer Applications at B.V.M. Holy Cross College.",
-    iconName: 'GraduationCap',
-    type: 'education',
-  },
-  {
-    id: 'ev7',
-    date: '2019 – 2021',
-    title: 'Higher Secondary Education (Computer Science)',
-    description: 'Completed Higher Secondary (Computer Science stream) at St. Thomas HSS, Erumely.',
-    iconName: 'Laptop',
-    type: 'education',
-  },
-  {
-    id: 'ev8',
-    date: '2019 - 2020',
-    title: 'State-Level Work Exhibition',
-    description: 'Participated by designing and presenting a multi-purpose rescue vehicle concept.',
-    iconName: 'Star',
-    type: 'milestone',
-  },
-  {
-    id: 'ev9',
-    date: '2018 – 2019',
-    title: 'High School Education',
-    description: 'Completed High School at St. Mary’s HS, Umikuppa.',
-    iconName: 'GraduationCap',
-    type: 'education',
-  },
-];
+// export interface Certification {
+//   id: string;
+//   title: string;
+//   issuer: string;
+//   date: string;
+//   imageUrl: string;
+//   imageHint: string;
+//   verifyUrl?: string;
+// }
 
+// Data arrays are now commented out or removed as data comes from Supabase
+// export const projectsData: Project[] = [ /* ... */ ];
+// export const skillsData: SkillCategory[] = [ /* ... */ ];
+// export const timelineData: TimelineEvent[] = [ /* ... */ ];
+// export const certificationsData: Certification[] = [ /* ... */ ];
 
-export const certificationsData: Certification[] = [
-  {
-    id: '1',
-    title: 'Microsoft Certified: Azure Fundamentals',
-    issuer: 'Microsoft',
-    date: 'March 2023',
-    imageUrl: 'https://picsum.photos/seed/cert1/600/400', 
-    imageHint: 'azure certificate',
-    verifyUrl: '#',
-  },
-  {
-    id: '2',
-    title: 'Full-Stack Web Development Bootcamp',
-    issuer: 'Udemy',
-    date: 'July 2022',
-    imageUrl: 'https://picsum.photos/seed/cert2/600/400', 
-    imageHint: 'web development',
-    verifyUrl: '#',
-  },
-  {
-    id: '3',
-    title: 'Data Science Specialization',
-    issuer: 'Coursera (Johns Hopkins University)',
-    date: 'May 2021',
-    imageUrl: 'https://picsum.photos/seed/cert3/600/400', 
-    imageHint: 'data science',
-  },
-  {
-    id: '4',
-    title: 'Python for Everybody Specialization',
-    issuer: 'Coursera (University of Michigan)',
-    date: 'January 2022',
-    imageUrl: 'https://picsum.photos/seed/cert4/600/400',
-    imageHint: 'python programming',
-    verifyUrl: '#',
-  },
-  {
-    id: '5',
-    title: 'Google IT Support Professional Certificate',
-    issuer: 'Coursera (Google)',
-    date: 'September 2021',
-    imageUrl: 'https://picsum.photos/seed/cert5/600/400',
-    imageHint: 'it support',
-  },
-];
 
 export const navLinks = [
   { href: "#hero", label: "Home" },
@@ -391,3 +88,18 @@ export const navLinks = [
   { href: "#resume", label: "Resume" },
   { href: "#contact", label: "Contact" },
 ];
+
+// Keep IconMap for TimelineItem for now, or adapt TimelineItem to accept iconName string
+export const IconMap = {
+  Lightbulb,
+  Briefcase,
+  Award,
+  GraduationCap,
+  Laptop,
+  Star,
+};
+
+// Placeholder for where all Lucide icons could be exported for dynamic use
+// This is useful if icon names are stored in the DB for SkillCard/CategoryCard
+import * as LucideIcons from 'lucide-react';
+export { LucideIcons };

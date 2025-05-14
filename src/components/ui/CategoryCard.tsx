@@ -2,16 +2,19 @@ import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import * as LucideIcons from 'lucide-react'; // Import all icons
 
 interface CategoryCardProps {
   name: string;
-  icon: LucideIcon;
+  iconName: string | null; // Changed from icon: LucideIcon
   iconColor?: string;
   skillCount: number;
   onClick: () => void;
 }
 
-export default function CategoryCard({ name, icon: Icon, iconColor = 'text-primary', skillCount, onClick }: CategoryCardProps) {
+export default function CategoryCard({ name, iconName, iconColor = 'text-primary', skillCount, onClick }: CategoryCardProps) {
+  const Icon = iconName ? (LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon || LucideIcons.Package) : LucideIcons.Package; // Default icon
+
   return (
     <Card
       className="text-center p-4 hover:shadow-xl transition-shadow duration-300 bg-card cursor-pointer group transform hover:scale-105"
