@@ -1,8 +1,6 @@
 
 "use server"; // Make this a Server Component
 
-export const dynamic = 'force-dynamic';
-
 import { supabase } from '@/lib/supabaseClient';
 import SectionWrapper from '@/components/ui/SectionWrapper';
 import type { SkillCategory, Skill } from '@/types/supabase';
